@@ -30,6 +30,10 @@ func main() {
 		podcast.GetEpisodes(true)
 	case "refreshAll":
 		GetAllPodcasts(true)
+		os.Remove(getCachePath("latest"))
+	case "refreshInBackground":
+		GetAllPodcasts(true)
+		clearOldCache()
 	case "addToQueue":
 		if url == "" {
 			Notify("Error", "No episode URL provided")
@@ -91,7 +95,6 @@ func main() {
 	case "test":
 		// test
 	default:
-		clearOldCache()
 	}
 
 	workflow.Output()

@@ -87,7 +87,6 @@ func GetAllPodcasts(force bool) error {
 	}
 	wg.Wait()
 	allPodcasts = podcasts
-	os.Remove(getCachePath("latest"))
 	return nil
 }
 

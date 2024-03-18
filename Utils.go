@@ -131,7 +131,7 @@ func clearOldCache() {
 
 func cacheInBackground() {
 	cmd := exec.Command(os.Args[0])
-	cmd.Env = append(os.Environ(), "action=refreshAll")
+	cmd.Env = append(os.Environ(), "action=refreshInBackground")
 	cmd.Env = append(os.Environ(), "trigger=")
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setsid: true,
