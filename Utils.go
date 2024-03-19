@@ -114,7 +114,7 @@ func readCache(path string, maxAge time.Duration) ([]byte, error) {
 		if os.IsNotExist(err) {
 			return nil, fmt.Errorf("cache not found")
 		} else {
-			cacheInBackground()
+			refreshInBackground()
 		}
 	}
 	return os.ReadFile(path)
@@ -129,10 +129,10 @@ func clearOldCache() {
 	cmd.Run()
 }
 
-func cacheInBackground() {
+func refreshInBackground() {
 	cmd := exec.Command(os.Args[0])
 	cmd.Env = append(os.Environ(), "action=refreshInBackground")
-	cmd.Env = append(os.Environ(), "trigger=")
+	cmd.Env = append(cmd.Env, "trigger=")
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setsid: true,
 	}

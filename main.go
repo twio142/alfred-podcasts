@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	// "log"
+	"log"
 )
 
 var cacheDir = os.Getenv("alfred_workflow_cache")
@@ -30,6 +30,8 @@ func main() {
 		podcast.GetEpisodes(true)
 	case "refreshAll":
 		GetAllPodcasts(true)
+		os.Remove(getCachePath("latest"))
+	case "refreshLatest":
 		os.Remove(getCachePath("latest"))
 	case "refreshInBackground":
 		GetAllPodcasts(true)
@@ -93,7 +95,7 @@ func main() {
 			}
 		}
 	case "test":
-		// test
+		log.Println("test")
 	default:
 	}
 

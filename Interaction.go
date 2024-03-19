@@ -38,10 +38,10 @@ func ListLatest() {
 	}
 	for _, e := range episodes {
 		item := e.Format()
-		alt := Mod{Subtitle: "Refresh all podcasts", Valid: true, Icon: struct {
+		alt := Mod{Subtitle: "Refresh latest episodes", Valid: true, Icon: struct {
 			Path string `json:"path"`
 		}{Path: "icons/refresh.png"}}
-		alt.SetVar("action", "refreshAll")
+		alt.SetVar("action", "refreshLatest")
 		item.Mods.Alt = alt
 		workflow.AddItem(item)
 	}

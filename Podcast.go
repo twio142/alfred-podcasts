@@ -246,7 +246,7 @@ func (e *Episode) CacheShownote() string {
 	html = re.ReplaceAllString(html, "$1")
 	html = strings.ReplaceAll(html, "\n", "<br/>")
 	if e.Image != "" {
-		html += "\n\n<img width=\"50%\" src=\"" + e.Image + "\"/>"
+		html += "\n\n<img width=\"20%\" src=\"" + e.Image + "\"/>"
 	}
 	os.WriteFile(path, []byte(html), 0644)
 	return path
