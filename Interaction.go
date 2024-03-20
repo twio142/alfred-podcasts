@@ -107,18 +107,20 @@ func ListQueue() {
 		}
 		for _, e := range latestEpisodes {
 			if e.URL == i.Filename {
-				episodes = append(episodes, e)
 				item := e.Format()
 				item.Valid = !i.Current
 				item.SetVar("action", "play")
 				if len(episodes) > 1 {
-					cmd := Mod{Subtitle: "Play next", Valid:true, Icon: struct {
+					alt := Mod{Subtitle: "Play next", Valid:true, Icon: struct {
 						Path string `json:"path"`
 					}{Path: "icons/moveUp.png"}}
-					cmd.SetVar("action", "playNext")
-					item.Mods.Cmd = cmd
+					alt.SetVar("action", "playNext")
+					item.Mods.Alt = alt
+				} else if len(episodes) == 0 {
+					item.Mods.Cmd = Mod{}
 				}
 				workflow.AddItem(item)
+				episodes = append(episodes, e)
 				break
 			}
 		}
