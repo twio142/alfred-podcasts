@@ -84,6 +84,9 @@ func GetPlaylist() ([]PlaylistItem, error) {
 }
 
 func AddToPlaylist(u string) error {
+    if u == "" {
+        return fmt.Errorf("no episode URL provided")
+    }
 	_, err := runCommand("loadfile", u, "append")
 	if err != nil {
 		cmd := exec.Command("/usr/bin/open", "iina://weblink?url=" + url.QueryEscape(u))
@@ -93,6 +96,9 @@ func AddToPlaylist(u string) error {
 }
 
 func PlayEpisode(url string, n ...bool) error {
+    if url == "" {
+        return fmt.Errorf("no episode URL provided")
+    }
 	next := len(n) > 0 && n[0]
 	playlist, err := GetPlaylist()
 	if err != nil && next {
@@ -146,6 +152,28 @@ func PlayPause(p ...bool) error {
 	}
 }
 
+func RemoveFromPlaylist(url string) error {
+    if url == "" {
+        return fmt.Errorf("no episode URL provided")
+    }
+    playlist, err := GetPlaylist()
+    if err != nil {
+        return err
+    }
+    for x, item := range playlist {
+        if item.Filename == url {
+            if item.Current {
+                if _, err = runCommand("playlist-next"); err != nil {
+                    return err
+                }
+            }
+            _, err = runCommand("playlist-remove", strconv.Itoa(x))
+            return err
+        }
+    }
+    return fmt.Errorf("episode not found in playlist")
+}
+
 func PlayerControl(episodes []*Episode) *Item {
 	playback := 0
 	if p, err := runCommand("get_property", "playback-time"); err == nil {
@@ -171,7 +199,7 @@ func PlayerControl(episodes []*Episode) *Item {
 	title += fmt.Sprintf(", %s Remaining", formatDuration(totalRemain))
 	item := Item{
 		Title: title,
-		Subtitle: fmt.Sprintf("%s  %s  －%s", formatDuration(playback), progressBar, formatDuration(remain)),
+		Subtitle: fmt.Sprintf("%s  %s  - %s", formatDuration(playback), progressBar, formatDuration(remain)),
 		Valid: true,
 		Icon: struct {
 			Path string `json:"path"`

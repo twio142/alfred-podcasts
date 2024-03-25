@@ -206,7 +206,7 @@ func (p *Podcast) GetEpisodes(force bool) error {
 		p.Link = rss.Channel.Link
 		for _, item := range rss.Channel.Items {
 			e := Episode{
-				Title: strings.ReplaceAll(item.Title, "&amp;", "&"),
+                Title: strings.TrimSpace(strings.ReplaceAll(item.Title, "&amp;", "&")),
 				Html: longestString(item.Desc, item.Content, item.Summary),
 				Date: parseDate(item.Date),
 				Author: p.Name,

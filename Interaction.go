@@ -111,14 +111,16 @@ func ListQueue() {
 				item.Valid = !i.Current
 				item.SetVar("action", "play")
 				if len(episodes) > 1 {
-					alt := Mod{Subtitle: "Play next", Valid:true, Icon: struct {
-						Path string `json:"path"`
-					}{Path: "icons/moveUp.png"}}
+					alt := Mod{Subtitle: "Play next", Valid:true, Icon: struct {Path string `json:"path"`}{Path: "icons/moveUp.png"}}
 					alt.SetVar("action", "playNext")
 					item.Mods.Alt = alt
 				} else if len(episodes) == 0 {
 					item.Mods.Cmd = Mod{}
 				}
+                ctrl := Mod{Subtitle: "Remove from queue", Valid:true, Icon: struct {Path string `json:"path"`}{Path: "icons/trash.png"}}
+                ctrl.SetVar("action", "remove")
+                ctrl.SetVar("url", e.URL)
+                item.Mods.Ctrl = ctrl
 				workflow.AddItem(item)
 				episodes = append(episodes, e)
 				break
@@ -161,9 +163,7 @@ func (p *Podcast) Format() *Item {
 	item.SetVar("trigger", "episodes")
 	item.SetVar("podcast", p.Name)
 
-	alt := Mod{Subtitle: "Refresh podcast", Valid: true, Icon: struct {
-		Path string `json:"path"`
-	}{Path: "icons/refresh.png"}}
+	alt := Mod{Subtitle: "Refresh podcast", Valid: true, Icon: struct {Path string `json:"path"`}{Path: "icons/refresh.png"}}
 	alt.SetVar("action", "refresh")
 	alt.SetVar("podcast", p.Name)
 	item.Mods.Alt = alt
@@ -203,9 +203,7 @@ func (e *Episode) Format() *Item {
 	item.SetVar("podcast", e.Author)
 	item.SetVar("url", e.URL)
 
-	cmd := Mod{Subtitle: "Play now", Valid: true, Icon: struct {
-		Path string `json:"path"`
-	}{Path: "icons/play.png"}}
+	cmd := Mod{Subtitle: "Play now", Valid: true, Icon: struct {Path string `json:"path"`}{Path: "icons/play.png"}}
 	cmd.SetVar("action", "play")
 	cmd.SetVar("url", e.URL)
 	item.Mods.Cmd = cmd

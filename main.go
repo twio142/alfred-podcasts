@@ -37,26 +37,23 @@ func main() {
 		GetAllPodcasts(true)
 		clearOldCache()
 	case "addToQueue":
-		if url == "" {
-			Notify("Error", "No episode URL provided")
-		} else {
-			AddToPlaylist(url)
-			if trigger != "queue" {
-				AddToLatest(url, os.Getenv("podcast"))
-			}
+        if err := AddToPlaylist(url); err != nil {
+            Notify("Error", err.Error())
+        } else if trigger != "queue" {
+            AddToLatest(url, os.Getenv("podcast"))
 		}
 	case "play":
-		if url == "" {
-			Notify("Error", "No episode URL provided")
-		} else {
-			PlayEpisode(url)
+        if err := PlayEpisode(url); err != nil {
+            Notify("Error", err.Error())
 		}
 	case "playNext":
-		if url == "" {
-			Notify("Error", "No episode URL provided")
-		} else {
-			PlayEpisode(url, true)
+		if err := PlayEpisode(url, true); err != nil {
+            Notify("Error", err.Error())
 		}
+    case "remove":
+        if err := RemoveFromPlaylist(url); err != nil {
+            Notify("Error", err.Error())
+        }
 	case "playPause":
 		PlayPause()
 	case "15Back":
