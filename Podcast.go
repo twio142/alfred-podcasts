@@ -12,6 +12,8 @@ import (
 	"strings"
 	"regexp"
 	"strconv"
+	"golang.org/x/sync/semaphore"
+	"context"
 )
 
 type Podcast struct {
@@ -41,6 +43,8 @@ func GetAllPodcasts(force bool) error {
 		})
 	}()
 
+	sem := semaphore.NewWeighted(30)
+
 	if !force {
 		if len(allPodcasts) > 0 {
 			return nil
@@ -53,6 +57,11 @@ func GetAllPodcasts(force bool) error {
 				decodedName, _ := url.PathUnescape(file.Name())
 				wg.Add(1)
 				go func(p *Podcast) {
+					if err := sem.Acquire(context.Background(), 1); err != nil {
+						wg.Done()
+						return
+					}
+					defer sem.Release(1)
 					defer wg.Done()
 					p.GetEpisodes(false)
 					podcastCh <- p
@@ -80,6 +89,11 @@ func GetAllPodcasts(force bool) error {
 	for _, p := range podcasts {
 		wg.Add(1)
 		go func(p *Podcast) {
+			if err := sem.Acquire(context.Background(), 1); err != nil {
+				wg.Done()
+				return
+			}
+			defer sem.Release(1)
 			defer wg.Done()
 			p.GetEpisodes(force)
 			p.CacheArtwork()
