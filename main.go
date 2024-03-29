@@ -36,28 +36,29 @@ func main() {
 	case "refreshInBackground":
 		GetAllPodcasts(true)
 		clearOldCache()
+		defer os.Remove(getCachePath("podcasts.lock"))
 	case "addToQueue":
-        if err := AddToPlaylist(url); err != nil {
-            Notify("Error", err.Error())
-        } else if trigger != "queue" {
-            AddToLatest(url, os.Getenv("podcast"))
+		if err := AddToPlaylist(url); err != nil {
+			Notify("Error", err.Error())
+		} else if trigger != "queue" {
+			AddToLatest(url, os.Getenv("podcast"))
 		}
 	case "play":
-        if err := PlayEpisode(url); err != nil {
-            Notify("Error", err.Error())
+		if err := PlayEpisode(url); err != nil {
+			Notify("Error", err.Error())
 		}
 	case "playNext":
 		if err := PlayEpisode(url, true); err != nil {
-            Notify("Error", err.Error())
+			Notify("Error", err.Error())
 		}
-    case "remove":
-        if err := RemoveFromPlaylist(url); err != nil {
-            Notify("Error", err.Error())
-        }
+	case "remove":
+		if err := RemoveFromPlaylist(url); err != nil {
+			Notify("Error", err.Error())
+		}
 	case "playPause":
 		PlayPause()
-	case "15Back":
-		runCommand("seek", "-15")
+	case "30Back":
+		runCommand("seek", "-30")
 	case "next":
 		runCommand("playlist-next")
 	case "save":
@@ -80,16 +81,13 @@ func main() {
 	case "queue":
 		ListQueue()
 	case "playing":
-		if title := os.Getenv("title"); title != "" {
-			for _, e := range GetLatestEpisodes(false) {
-				if e.Title == title {
-					item := e.Format()
-					item.Valid = false
-					item.Mods.Cmd = Mod{}
-					workflow.AddItem(item)
-					break
-				}
-			}
+		if e := FindEpisode(map[string]string{"title": os.Getenv("title"), "author": os.Getenv("artist")}); e != nil {
+			item := e.Format()
+			item.Valid = false
+			item.Mods.Cmd = Mod{}
+			workflow.AddItem(item)
+		} else {
+			workflow.WarnEmpty("No Episode Found")
 		}
 	case "test":
 		log.Println("test")

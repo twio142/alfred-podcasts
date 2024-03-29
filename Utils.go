@@ -24,7 +24,7 @@ func matchString(text ...string) string {
 }
 
 func formatDuration(duration int) string {
-	if duration == 0 {
+	if duration <= 0 {
 		return "--:--"
 	}
 	hours := duration / 3600
@@ -130,6 +130,13 @@ func clearOldCache() {
 }
 
 func refreshInBackground() {
+	_, err := os.OpenFile(getCachePath("podcasts.lock"), os.O_CREATE|os.O_EXCL, 0666)
+	if err != nil {
+		if os.IsExist(err) {
+			return
+		}
+		log.Fatalf("Failed to create lock file: %v", err)
+	}
 	cmd := exec.Command(os.Args[0])
 	cmd.Env = append(os.Environ(), "action=refreshInBackground")
 	cmd.Env = append(cmd.Env, "trigger=")

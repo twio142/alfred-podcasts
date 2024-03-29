@@ -84,9 +84,9 @@ func GetPlaylist() ([]PlaylistItem, error) {
 }
 
 func AddToPlaylist(u string) error {
-    if u == "" {
-        return fmt.Errorf("no episode URL provided")
-    }
+	if u == "" {
+		return fmt.Errorf("no episode URL provided")
+	}
 	_, err := runCommand("loadfile", u, "append")
 	if err != nil {
 		cmd := exec.Command("/usr/bin/open", "iina://weblink?url=" + url.QueryEscape(u))
@@ -153,25 +153,25 @@ func PlayPause(p ...bool) error {
 }
 
 func RemoveFromPlaylist(url string) error {
-    if url == "" {
-        return fmt.Errorf("no episode URL provided")
-    }
-    playlist, err := GetPlaylist()
-    if err != nil {
-        return err
-    }
-    for x, item := range playlist {
-        if item.Filename == url {
-            if item.Current {
-                if _, err = runCommand("playlist-next"); err != nil {
-                    return err
-                }
-            }
-            _, err = runCommand("playlist-remove", strconv.Itoa(x))
-            return err
-        }
-    }
-    return fmt.Errorf("episode not found in playlist")
+	if url == "" {
+		return fmt.Errorf("no episode URL provided")
+	}
+	playlist, err := GetPlaylist()
+	if err != nil {
+		return err
+	}
+	for x, item := range playlist {
+		if item.Filename == url {
+			if item.Current {
+				if _, err = runCommand("playlist-next"); err != nil {
+					return err
+				}
+			}
+			_, err = runCommand("playlist-remove", strconv.Itoa(x))
+			return err
+		}
+	}
+	return fmt.Errorf("episode not found in playlist")
 }
 
 func PlayerControl(episodes []*Episode) *Item {
@@ -207,8 +207,8 @@ func PlayerControl(episodes []*Episode) *Item {
 	}
 	item.SetVar("action", "playPause")
 
-	cmd := Mod{Subtitle: "Seek 15s backwards", Valid: true, Icon: struct { Path string `json:"path"` }{Path: "icons/rewind.png"}}
-	cmd.SetVar("action", "15Back")
+	cmd := Mod{Subtitle: "Seek 30s backwards", Valid: true, Icon: struct { Path string `json:"path"` }{Path: "icons/rewind.png"}}
+	cmd.SetVar("action", "30Back")
 	item.Mods.Cmd = cmd
 
 	alt := Mod{Subtitle: "Play next episode", Valid: true, Icon: struct { Path string `json:"path"` }{Path: "icons/next.png"}}

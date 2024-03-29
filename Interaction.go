@@ -117,10 +117,10 @@ func ListQueue() {
 				} else if len(episodes) == 0 {
 					item.Mods.Cmd = Mod{}
 				}
-                ctrl := Mod{Subtitle: "Remove from queue", Valid:true, Icon: struct {Path string `json:"path"`}{Path: "icons/trash.png"}}
-                ctrl.SetVar("action", "remove")
-                ctrl.SetVar("url", e.URL)
-                item.Mods.Ctrl = ctrl
+				ctrl := Mod{Subtitle: "Remove from queue", Valid:true, Icon: struct {Path string `json:"path"`}{Path: "icons/trash.png"}}
+				ctrl.SetVar("action", "remove")
+				ctrl.SetVar("url", e.URL)
+				item.Mods.Ctrl = ctrl
 				workflow.AddItem(item)
 				episodes = append(episodes, e)
 				break

@@ -43,7 +43,7 @@ func GetAllPodcasts(force bool) error {
 		})
 	}()
 
-	sem := semaphore.NewWeighted(30)
+	sem := semaphore.NewWeighted(50)
 
 	if !force {
 		if len(allPodcasts) > 0 {
@@ -151,27 +151,32 @@ func AddToLatest(url string, name string) {
 			return
 		}
 	}
-	if episode := FindEpisode(url, name); episode != nil {
+	if episode := FindEpisode(map[string]string{"url": url, "author": name}); episode != nil {
 		latestEpisodes = append(latestEpisodes, episode)
 		data, _ := json.Marshal(latestEpisodes)
 		writeCache(getCachePath("latest"), data)
 	}
 }
 
-func FindEpisode(url string, name ...string) *Episode {
-	if len(name) == 0 || name[0] == "" {
-		for _, episode := range GetLatestEpisodes(false) {
-			if episode.URL == url {
-				return episode
-			}
-		}
-	} else {
-		p := &Podcast{Name: name[0]}
+func FindEpisode(args map[string]string) *Episode {
+	url := args["url"]
+	title := args["title"]
+	author := args["author"]
+	if url == "" && title == "" {
+		return nil
+	}
+	if author != "" {
+		p := &Podcast{Name: author}
 		p.GetEpisodes(false)
 		for _, e := range p.Episodes {
-			if e.URL == url {
+			if (url != "" && e.URL == url) || (title != "" && e.Title == title) {
 				return &e
 			}
+		}
+	}
+	for _, e := range GetLatestEpisodes(false) {
+		if (url != "" && e.URL == url) || (title != "" && e.Title == title) {
+			return e
 		}
 	}
 	return nil
@@ -220,7 +225,7 @@ func (p *Podcast) GetEpisodes(force bool) error {
 		p.Link = rss.Channel.Link
 		for _, item := range rss.Channel.Items {
 			e := Episode{
-                Title: strings.TrimSpace(strings.ReplaceAll(item.Title, "&amp;", "&")),
+				Title: strings.TrimSpace(strings.ReplaceAll(item.Title, "&amp;", "&")),
 				Html: longestString(item.Desc, item.Content, item.Summary),
 				Date: parseDate(item.Date),
 				Author: p.Name,
