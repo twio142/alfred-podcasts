@@ -87,12 +87,12 @@ func AddToPlaylist(u string) error {
 	if u == "" {
 		return fmt.Errorf("no episode URL provided")
 	}
-	_, err := runCommand("loadfile", u, "append")
-	if err != nil {
+	if _, err := runCommand("get_property", "time-pos"); err != nil {
 		cmd := exec.Command("/usr/bin/open", "iina://weblink?url="+url.QueryEscape(u))
 		return cmd.Run()
 	}
-	return nil
+	_, err := runCommand("loadfile", u, "append")
+	return err
 }
 
 func PlayEpisode(url string, n ...bool) error {
