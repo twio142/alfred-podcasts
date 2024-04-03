@@ -1,18 +1,20 @@
 package main
 
 import (
-	"os"
 	"fmt"
+	"os"
 )
 
 func ListPodcasts() {
 	GetAllPodcasts(false)
 	if len(allPodcasts) == 0 {
-		item := Item {
+		item := Item{
 			Title:    "No Podcasts Found",
 			Subtitle: "Refresh",
 			Valid:    true,
-			Icon:     struct{ Path string `json:"path"` }{Path: "icons/refresh.png"},
+			Icon: struct {
+				Path string `json:"path"`
+			}{Path: "icons/refresh.png"},
 		}
 		item.SetVar("action", "refreshAll")
 		workflow.AddItem(&item)
@@ -30,7 +32,9 @@ func ListLatest() {
 			Title:    "No Episodes Found",
 			Subtitle: "Refresh all podcasts",
 			Valid:    true,
-			Icon:     struct{ Path string `json:"path"` }{Path: "icons/refresh.png"},
+			Icon: struct {
+				Path string `json:"path"`
+			}{Path: "icons/refresh.png"},
 		}
 		item.SetVar("action", "refreshAll")
 		workflow.AddItem(&item)
@@ -62,7 +66,9 @@ func ListEpisodes() {
 			Title:    "No Episodes Found",
 			Subtitle: "Refresh podcast",
 			Valid:    true,
-			Icon:     struct{ Path string `json:"path"` }{Path: "icons/refresh.png"},
+			Icon: struct {
+				Path string `json:"path"`
+			}{Path: "icons/refresh.png"},
 		}
 		item.SetVar("action", "refresh")
 		workflow.AddItem(&item)
@@ -85,9 +91,11 @@ func ListEpisodes() {
 		workflow.AddItem(item)
 	}
 	item := Item{
-		Title:    "Go Back",
-		Valid:    true,
-		Icon:     struct{ Path string `json:"path"` }{Path: "icons/back.png"},
+		Title: "Go Back",
+		Valid: true,
+		Icon: struct {
+			Path string `json:"path"`
+		}{Path: "icons/back.png"},
 	}
 	item.SetVar("trigger", "podcasts")
 	workflow.AddItem(&item)
@@ -107,6 +115,13 @@ func ListQueue() {
 		}
 		for _, e := range latestEpisodes {
 			if e.URL == i.Filename {
+				if i.Current && e.Duration == 0 {
+					if duration, err := runCommand("get_property", "duration"); err == nil {
+						e.Duration = int(duration.(float64))
+					} else {
+						e.Duration = 999
+					}
+				}
 				item := e.Format()
 				item.Valid = !i.Current
 				item.SetVar("action", "play")
@@ -117,7 +132,9 @@ func ListQueue() {
 				} else if len(episodes) == 0 {
 					item.Mods.Cmd = Mod{}
 				}
-				ctrl := Mod{Subtitle: "Remove from queue", Valid:true, Icon: struct {Path string `json:"path"`}{Path: "icons/trash.png"}}
+				ctrl := Mod{Subtitle: "Remove from queue", Valid: true, Icon: struct {
+					Path string `json:"path"`
+				}{Path: "icons/trash.png"}}
 				ctrl.SetVar("action", "remove")
 				ctrl.SetVar("url", e.URL)
 				item.Mods.Ctrl = ctrl
@@ -136,14 +153,15 @@ func ListQueue() {
 
 func (p *Podcast) Format() *Item {
 	var icon = getCachePath("artworks", p.Name)
-	_, err := os.Stat(icon); if err != nil {
+	_, err := os.Stat(icon)
+	if err != nil {
 		icon = ""
 	}
 	var item = Item{
-		Title: p.Name,
-		Subtitle: p.Desc,
-		Match: matchString(p.Name),
-		Valid: true,
+		Title:        p.Name,
+		Subtitle:     p.Desc,
+		Match:        matchString(p.Name),
+		Valid:        true,
 		QuickLookURL: p.Link,
 		Text: struct {
 			Copy      string `json:"copy,omitempty"`
@@ -153,17 +171,19 @@ func (p *Podcast) Format() *Item {
 			Path string `json:"path"`
 		}{Path: icon},
 		Mods: struct {
-			Cmd   Mod `json:"cmd"`
-			Alt   Mod `json:"alt"`
-			Shift Mod `json:"shift"`
-			Ctrl  Mod `json:"ctrl"`
-			AltShift    Mod `json:"alt+shift"`
+			Cmd      Mod `json:"cmd"`
+			Alt      Mod `json:"alt"`
+			Shift    Mod `json:"shift"`
+			Ctrl     Mod `json:"ctrl"`
+			AltShift Mod `json:"alt+shift"`
 		}{},
 	}
 	item.SetVar("trigger", "episodes")
 	item.SetVar("podcast", p.Name)
 
-	alt := Mod{Subtitle: "Refresh podcast", Valid: true, Icon: struct {Path string `json:"path"`}{Path: "icons/refresh.png"}}
+	alt := Mod{Subtitle: "Refresh podcast", Valid: true, Icon: struct {
+		Path string `json:"path"`
+	}{Path: "icons/refresh.png"}}
 	alt.SetVar("action", "refresh")
 	alt.SetVar("podcast", p.Name)
 	item.Mods.Alt = alt
@@ -182,33 +202,35 @@ func (e *Episode) Format() *Item {
 		icon = ""
 	}
 	var item = Item{
-		Title:         e.Title,
-		Subtitle:      fmt.Sprintf("🗓  %s  ·  ⌛️ %s", e.Date.Format("Mon, 2006-01-02"), formatDuration(e.Duration)),
-		Valid:         true,
-		QuickLookURL:  e.CacheShownote(),
+		Title:        e.Title,
+		Subtitle:     fmt.Sprintf("🗓  %s  ·  ⌛️ %s", e.Date.Format("Mon, 2006-01-02"), formatDuration(e.Duration)),
+		Valid:        true,
+		QuickLookURL: e.CacheShownote(),
 		Icon: struct {
 			Path string `json:"path"`
 		}{Path: icon},
 		Match:        matchString(e.Title, e.Author),
 		AutoComplete: e.Author,
 		Mods: struct {
-			Cmd       Mod `json:"cmd"`
-			Alt       Mod `json:"alt"`
-			Shift     Mod `json:"shift"`
-			Ctrl      Mod `json:"ctrl"`
-			AltShift  Mod `json:"alt+shift"`
+			Cmd      Mod `json:"cmd"`
+			Alt      Mod `json:"alt"`
+			Shift    Mod `json:"shift"`
+			Ctrl     Mod `json:"ctrl"`
+			AltShift Mod `json:"alt+shift"`
 		}{},
 	}
 	item.SetVar("action", "addToQueue")
 	item.SetVar("podcast", e.Author)
 	item.SetVar("url", e.URL)
 
-	cmd := Mod{Subtitle: "Play now", Valid: true, Icon: struct {Path string `json:"path"`}{Path: "icons/play.png"}}
+	cmd := Mod{Subtitle: "Play now", Valid: true, Icon: struct {
+		Path string `json:"path"`
+	}{Path: "icons/play.png"}}
 	cmd.SetVar("action", "play")
 	cmd.SetVar("url", e.URL)
 	item.Mods.Cmd = cmd
 
-	shift := Mod{Subtitle: "List " + e.Author, Valid: true,}
+	shift := Mod{Subtitle: "List " + e.Author, Valid: true}
 	shift.SetVar("trigger", "episodes")
 	shift.SetVar("podcast", e.Author)
 	item.Mods.Shift = shift

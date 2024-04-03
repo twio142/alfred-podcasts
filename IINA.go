@@ -31,7 +31,7 @@ func runCommand(command ...string) (interface{}, error) {
 	}
 	var result struct {
 		Data  interface{} `json:"data"`
-		Error string `json:"error"`
+		Error string      `json:"error"`
 	}
 	if err = json.Unmarshal(out, &result); err != nil {
 		return "", err
@@ -89,16 +89,16 @@ func AddToPlaylist(u string) error {
 	}
 	_, err := runCommand("loadfile", u, "append")
 	if err != nil {
-		cmd := exec.Command("/usr/bin/open", "iina://weblink?url=" + url.QueryEscape(u))
+		cmd := exec.Command("/usr/bin/open", "iina://weblink?url="+url.QueryEscape(u))
 		return cmd.Run()
 	}
 	return nil
 }
 
 func PlayEpisode(url string, n ...bool) error {
-    if url == "" {
-        return fmt.Errorf("no episode URL provided")
-    }
+	if url == "" {
+		return fmt.Errorf("no episode URL provided")
+	}
 	next := len(n) > 0 && n[0]
 	playlist, err := GetPlaylist()
 	if err != nil && next {
@@ -107,7 +107,6 @@ func PlayEpisode(url string, n ...bool) error {
 	var to int
 	var from = -1
 	for idx, item := range playlist {
-		fmt.Println(item.Filename, item.Filename == url)
 		if item.Current {
 			to = idx
 		}
@@ -125,7 +124,7 @@ func PlayEpisode(url string, n ...bool) error {
 		to++
 	}
 	if from != to {
-		if _, err = runCommand("playlist-move", strconv.Itoa(from), strconv.Itoa(to));err != nil {
+		if _, err = runCommand("playlist-move", strconv.Itoa(from), strconv.Itoa(to)); err != nil {
 			return err
 		}
 	}
@@ -186,7 +185,7 @@ func PlayerControl(episodes []*Episode) *Item {
 	}
 	progressBar := ""
 	for i := 0; i <= 50; i++ {
-		if i == playback * 50 / episodes[0].Duration {
+		if i == playback*50/episodes[0].Duration {
 			progressBar += "✦"
 		} else {
 			progressBar += "·"
@@ -198,24 +197,30 @@ func PlayerControl(episodes []*Episode) *Item {
 	}
 	title += fmt.Sprintf(", %s Remaining", formatDuration(totalRemain))
 	item := Item{
-		Title: title,
+		Title:    title,
 		Subtitle: fmt.Sprintf("%s  %s  - %s", formatDuration(playback), progressBar, formatDuration(remain)),
-		Valid: true,
+		Valid:    true,
 		Icon: struct {
 			Path string `json:"path"`
 		}{Path: "icons/playpause.png"},
 	}
 	item.SetVar("action", "playPause")
 
-	cmd := Mod{Subtitle: "Seek 30s backwards", Valid: true, Icon: struct { Path string `json:"path"` }{Path: "icons/rewind.png"}}
+	cmd := Mod{Subtitle: "Seek 30s backwards", Valid: true, Icon: struct {
+		Path string `json:"path"`
+	}{Path: "icons/rewind.png"}}
 	cmd.SetVar("action", "30Back")
 	item.Mods.Cmd = cmd
 
-	alt := Mod{Subtitle: "Play next episode", Valid: true, Icon: struct { Path string `json:"path"` }{Path: "icons/next.png"}}
+	alt := Mod{Subtitle: "Play next episode", Valid: true, Icon: struct {
+		Path string `json:"path"`
+	}{Path: "icons/next.png"}}
 	alt.SetVar("action", "next")
 	item.Mods.Alt = alt
 
-	shift := Mod{Subtitle: "Save playlist", Valid: true, Icon: struct { Path string `json:"path"` }{Path: "icons/save.png"}}
+	shift := Mod{Subtitle: "Save playlist", Valid: true, Icon: struct {
+		Path string `json:"path"`
+	}{Path: "icons/save.png"}}
 	shift.SetVar("action", "save")
 	item.Mods.Shift = shift
 

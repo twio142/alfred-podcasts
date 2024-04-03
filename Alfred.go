@@ -30,7 +30,7 @@ type Item struct {
 	Valid        bool   `json:"valid"`
 	AutoComplete string `json:"autocomplete,omitempty"`
 	Type         string `json:"type,omitempty"`
-	Match				 string `json:"match,omitempty"`
+	Match        string `json:"match,omitempty"`
 	Text         struct {
 		Copy      string `json:"copy,omitempty"`
 		LargeType string `json:"largetype,omitempty"`
@@ -41,13 +41,13 @@ type Item struct {
 	} `json:"icon,omitempty"`
 	Variables map[string]string `json:"variables,omitempty"`
 	Mods      struct {
-		Cmd   Mod `json:"cmd"`
-		Alt   Mod `json:"alt"`
-		Shift Mod `json:"shift"`
-		Ctrl  Mod `json:"ctrl"`
-		AltShift    Mod `json:"alt+shift"`
+		Cmd      Mod `json:"cmd"`
+		Alt      Mod `json:"alt"`
+		Shift    Mod `json:"shift"`
+		Ctrl     Mod `json:"ctrl"`
+		AltShift Mod `json:"alt+shift"`
 	} `json:"mods,omitempty"`
-	SortKey		 interface{} `json:"-"`
+	SortKey interface{} `json:"-"`
 }
 
 func (i *Item) SetVar(name string, value string) {

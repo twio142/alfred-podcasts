@@ -2,19 +2,19 @@ package main
 
 import (
 	"encoding/xml"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
-	"time"
-	"fmt"
-	"strings"
 	"regexp"
+	"strings"
+	"time"
 )
 
 type Opml struct {
 	Body struct {
-	  Outlines struct {
+		Outlines struct {
 			Feeds []struct {
 				Text string `xml:"text,attr"`
 				Url  string `xml:"xmlUrl,attr"`
@@ -28,28 +28,28 @@ type RSS struct {
 		Items []ChannelItem `xml:"item"`
 		Title string        `xml:"title"`
 		Link  string        `xml:"link"`
-		Desc  string `xml:"description"`
-		Image     struct {
+		Desc  string        `xml:"description"`
+		Image struct {
 			Href string `xml:"href,attr"`
-			URL	string `xml:"url"`
+			URL  string `xml:"url"`
 		} `xml:"image"`
 		Summary string `xml:"summary"`
 	} `xml:"channel"`
 }
 
 type ChannelItem struct {
-	Title   string `xml:"title"`
-	Desc    string `xml:"description"`
-	Content string `xml:"content:encoded"`
-	Date    string `xml:"pubDate"`
+	Title     string `xml:"title"`
+	Desc      string `xml:"description"`
+	Content   string `xml:"content:encoded"`
+	Date      string `xml:"pubDate"`
 	Enclosure struct {
-		URL		string `xml:"url,attr"`
+		URL string `xml:"url,attr"`
 	} `xml:"enclosure"`
 	Link     string `xml:"link"`
 	Duration string `xml:"duration"`
-	Image  struct {
+	Image    struct {
 		Href string `xml:"href,attr"`
-		URL	string `xml:"url"`
+		URL  string `xml:"url"`
 	} `xml:"image"`
 	Summary string `xml:"summary"`
 }

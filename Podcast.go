@@ -1,39 +1,39 @@
 package main
 
 import (
-	"time"
-	"os"
-	"net/url"
-	"fmt"
-	"sync"
-	"sort"
-	"math"
-	"encoding/json"
-	"strings"
-	"regexp"
-	"strconv"
-	"golang.org/x/sync/semaphore"
 	"context"
+	"encoding/json"
+	"fmt"
+	"golang.org/x/sync/semaphore"
+	"math"
+	"net/url"
+	"os"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
 )
 
 type Podcast struct {
-	Name  string `json:"name"`
-	URL   string  `json:"url"`
-	Desc  string `json:"desc"`
-	Image string `json:"image"`
-	Link  string `json:"link"`
-	Episodes []Episode `json:"episodes"`
+	Name        string    `json:"name"`
+	URL         string    `json:"url"`
+	Desc        string    `json:"desc"`
+	Image       string    `json:"image"`
+	Link        string    `json:"link"`
+	Episodes    []Episode `json:"episodes"`
 	LastUpdated time.Time `json:"lastUpdated"`
 }
 
 type Episode struct {
-	Title string `json:"title"`
-	URL string `json:"url"`
-	Html  string `json:"html"`
-	Author string `json:"author"`
-	Date time.Time `json:"date"`
-	Duration int `json:"duration"`
-	Image string `json:"image"`
+	Title    string    `json:"title"`
+	URL      string    `json:"url"`
+	Html     string    `json:"html"`
+	Author   string    `json:"author"`
+	Date     time.Time `json:"date"`
+	Duration int       `json:"duration"`
+	Image    string    `json:"image"`
 }
 
 func GetAllPodcasts(force bool) error {
@@ -225,12 +225,12 @@ func (p *Podcast) GetEpisodes(force bool) error {
 		p.Link = rss.Channel.Link
 		for _, item := range rss.Channel.Items {
 			e := Episode{
-				Title: strings.TrimSpace(strings.ReplaceAll(item.Title, "&amp;", "&")),
-				Html: longestString(item.Desc, item.Content, item.Summary),
-				Date: parseDate(item.Date),
-				Author: p.Name,
+				Title:    strings.TrimSpace(strings.ReplaceAll(item.Title, "&amp;", "&")),
+				Html:     longestString(item.Desc, item.Content, item.Summary),
+				Date:     parseDate(item.Date),
+				Author:   p.Name,
 				Duration: calculateDuration(item.Duration),
-				Image: longestString(item.Image.Href, item.Image.URL, p.Image),
+				Image:    longestString(item.Image.Href, item.Image.URL, p.Image),
 			}
 			e.URL = item.Enclosure.URL
 			if e.URL == "" {
