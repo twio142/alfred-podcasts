@@ -23,8 +23,12 @@ func main() {
 
 	trigger := os.Getenv("trigger")
 	url := os.Getenv("url")
+	action := os.Getenv("action")
+	if action == "" {
+		action = os.Getenv("actionKeep")
+	}
 
-	switch os.Getenv("action") {
+	switch action {
 	case "refresh":
 		podcast = &Podcast{Name: os.Getenv("podcast")}
 		podcast.GetEpisodes(true)
@@ -66,6 +70,10 @@ func main() {
 		Notify("Playlist saved")
 	default:
 		// do nothing
+	}
+
+	if os.Getenv("actionKeep") != "" {
+		return
 	}
 
 	workflow.SetVar("action", "")

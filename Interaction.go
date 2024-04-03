@@ -128,6 +128,7 @@ func ListQueue() {
 				if len(episodes) > 1 {
 					alt := Mod{Subtitle: "Play next", Valid:true, Icon: struct {Path string `json:"path"`}{Path: "icons/moveUp.png"}}
 					alt.SetVar("action", "playNext")
+					alt.SetVar("url", e.URL)
 					item.Mods.Alt = alt
 				} else if len(episodes) == 0 {
 					item.Mods.Cmd = Mod{}
@@ -219,14 +220,14 @@ func (e *Episode) Format() *Item {
 			AltShift Mod `json:"alt+shift"`
 		}{},
 	}
-	item.SetVar("action", "addToQueue")
+	item.SetVar("actionKeep", "addToQueue")
 	item.SetVar("podcast", e.Author)
 	item.SetVar("url", e.URL)
 
 	cmd := Mod{Subtitle: "Play now", Valid: true, Icon: struct {
 		Path string `json:"path"`
 	}{Path: "icons/play.png"}}
-	cmd.SetVar("action", "play")
+	cmd.SetVar("actionKeep", "play")
 	cmd.SetVar("url", e.URL)
 	item.Mods.Cmd = cmd
 

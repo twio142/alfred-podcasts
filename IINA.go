@@ -204,12 +204,12 @@ func PlayerControl(episodes []*Episode) *Item {
 			Path string `json:"path"`
 		}{Path: "icons/playpause.png"},
 	}
-	item.SetVar("action", "playPause")
+	item.SetVar("actionKeep", "playPause")
 
 	cmd := Mod{Subtitle: "Seek 30s backwards", Valid: true, Icon: struct {
 		Path string `json:"path"`
 	}{Path: "icons/rewind.png"}}
-	cmd.SetVar("action", "30Back")
+	cmd.SetVar("actionKeep", "30Back")
 	item.Mods.Cmd = cmd
 
 	alt := Mod{Subtitle: "Play next episode", Valid: true, Icon: struct {
@@ -221,7 +221,7 @@ func PlayerControl(episodes []*Episode) *Item {
 	shift := Mod{Subtitle: "Save playlist", Valid: true, Icon: struct {
 		Path string `json:"path"`
 	}{Path: "icons/save.png"}}
-	shift.SetVar("action", "save")
+	shift.SetVar("actionKeep", "save")
 	item.Mods.Shift = shift
 
 	return &item
