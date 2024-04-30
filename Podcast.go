@@ -263,6 +263,8 @@ func (e *Episode) CacheShownote() string {
 	html = re.ReplaceAllString(e.Html, "$1")
 	re = regexp.MustCompile(`(<(p|span) [^>]*style=("[^"]+[^-]|"))color:.+?; ?`)
 	html = re.ReplaceAllString(html, "$1")
+	re = regexp.MustCompile(`<audio[^>]*(>[\s\S]*?</audio|/)>`)
+	html = re.ReplaceAllString(html, "")
 	html = strings.ReplaceAll(html, "\n", "<br/>")
 	if e.Image != "" {
 		html += "\n\n<img width=\"20%\" src=\"" + e.Image + "\"/>"
