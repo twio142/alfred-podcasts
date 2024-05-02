@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+    "fmt"
 	"os"
 )
 
@@ -72,11 +73,11 @@ func main() {
 		// do nothing
 	}
 
-	if os.Getenv("actionKeep") != "" {
+	if action != "" {
+        fmt.Println("{\"alfredworkflow\": {\"variables\": {\"action\": \"\"}}}")
 		return
 	}
 
-	workflow.SetVar("action", "")
 	workflow.SetVar("trigger", trigger)
 
 	switch trigger {
