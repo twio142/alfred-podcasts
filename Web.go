@@ -93,7 +93,12 @@ func RequestRss(url string) (*RSS, error) {
 	var client = &http.Client{
 		Timeout: 10 * time.Second,
 	}
-	resp, err := client.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}

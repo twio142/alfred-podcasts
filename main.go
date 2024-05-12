@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-    "fmt"
+	"fmt"
 	"os"
 )
 
@@ -74,7 +74,7 @@ func main() {
 	}
 
 	if action != "" {
-        fmt.Println("{\"alfredworkflow\": {\"variables\": {\"action\": \"\"}}}")
+		fmt.Println("{\"alfredworkflow\":{\"variables\":{\"action\":\"\"}}}")
 		return
 	}
 
