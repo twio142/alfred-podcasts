@@ -88,6 +88,7 @@ func ListEpisodes() {
 		alt.SetVar("action", "refresh")
 		alt.SetVar("podcast", e.Author)
 		item.Mods.Alt = alt
+		item.Mods.Shift = Mod{}
 		workflow.AddItem(item)
 	}
 	item := Item{
@@ -205,6 +206,7 @@ func (e *Episode) Format() *Item {
 	var item = Item{
 		Title:        e.Title,
 		Subtitle:     fmt.Sprintf("🗓  %s  ·  ⌛️ %s", e.Date.Format("Mon, 2006-01-02"), formatDuration(e.Duration)),
+    Arg:         e.URL,
 		Valid:        true,
 		QuickLookURL: e.CacheShownote(),
 		Icon: struct {
