@@ -124,8 +124,7 @@ func ListQueue() {
 					}
 				}
 				item := e.Format()
-				item.Valid = !i.Current
-				item.SetVar("action", "play")
+				item.Valid = false
 				if len(episodes) > 1 {
 					alt := Mod{Subtitle: "Play next", Valid:true, Icon: struct {Path string `json:"path"`}{Path: "icons/moveUp.png"}}
 					alt.SetVar("action", "playNext")

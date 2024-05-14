@@ -35,9 +35,9 @@ func main() {
 		podcast.GetEpisodes(true)
 	case "refreshAll":
 		GetAllPodcasts(true)
-		os.Remove(getCachePath("latest"))
+		refreshLatest()
 	case "refreshLatest":
-		os.Remove(getCachePath("latest"))
+		refreshLatest()
 	case "refreshInBackground":
 		GetAllPodcasts(true)
 		clearOldCache()

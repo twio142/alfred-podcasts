@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/sync/semaphore"
 	"math"
 	"net/url"
 	"os"
@@ -14,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/sync/semaphore"
 )
 
 type Podcast struct {
@@ -138,6 +139,56 @@ func GetLatestEpisodes(force bool) []*Episode {
 		data, _ = json.Marshal(episodes)
 		writeCache(path, data)
 		return episodes
+	}
+}
+
+func refreshLatest() {
+	var latestEpisodes []*Episode
+	var episodesToKeep []*Episode
+	path := getCachePath("latest")
+
+	if data, err := readCache(path, time.Duration(math.MaxInt64)); err == nil {
+		json.Unmarshal(data, &latestEpisodes)
+	} else {
+		os.Remove(getCachePath("latest"))
+		return
+	}
+
+	items, err := GetPlaylist()
+	if err != nil || len(items) == 0 {
+		os.Remove(getCachePath("latest"))
+		return
+	}
+	for i, item := range items {
+		if item.Current {
+			items = items[i:]
+			break
+		}
+	}
+	for _, item := range items {
+		for _, e := range latestEpisodes {
+			if e.URL == item.Filename {
+				episodesToKeep = append(episodesToKeep, e)
+				break
+			}
+		}
+	}
+	if len(episodesToKeep) == 0 {
+		os.Remove(getCachePath("latest"))
+		return
+	}
+
+	latestEpisodes = GetLatestEpisodes(true)
+	count := len(latestEpisodes)
+	threshold := latestEpisodes[len(latestEpisodes)-1].Date
+	for _, e := range episodesToKeep {
+		if e.Date.Before(threshold) {
+			latestEpisodes = append(latestEpisodes, e)
+		}
+	}
+	if len(latestEpisodes) > count {
+		data, _ := json.Marshal(latestEpisodes)
+		writeCache(path, data)
 	}
 }
 
