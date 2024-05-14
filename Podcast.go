@@ -55,6 +55,9 @@ func GetAllPodcasts(force bool) error {
 			podcastCh := make(chan *Podcast, len(files))
 			var wg sync.WaitGroup
 			for _, file := range files {
+				if file.Name() == ".DS_Store" || file.IsDir() {
+					continue
+				}
 				decodedName, _ := url.PathUnescape(file.Name())
 				wg.Add(1)
 				go func(p *Podcast) {
@@ -173,12 +176,12 @@ func refreshLatest() {
 			}
 		}
 	}
+	os.Remove(getCachePath("latest"))
 	if len(episodesToKeep) == 0 {
-		os.Remove(getCachePath("latest"))
 		return
 	}
 
-	latestEpisodes = GetLatestEpisodes(true)
+	latestEpisodes = GetLatestEpisodes(false)
 	count := len(latestEpisodes)
 	threshold := latestEpisodes[len(latestEpisodes)-1].Date
 	for _, e := range episodesToKeep {

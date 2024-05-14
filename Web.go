@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -85,6 +86,25 @@ func RequestFeeds() ([]*Podcast, error) {
 	for _, outline := range opml.Body.Outlines.Feeds {
 		podcast := Podcast{Name: outline.Text, URL: outline.Url}
 		podcasts = append(podcasts, &podcast)
+	}
+	if files, err := os.ReadDir(getCachePath("podcasts")); err == nil {
+		for _, file := range files {
+			if file.IsDir() {
+				continue
+			}
+			decodedName, _ := url.PathUnescape(file.Name())
+			found := false
+			for _, podcast := range podcasts {
+				if podcast.Name == decodedName {
+					found = true
+					break
+				}
+			}
+			if !found {
+				os.Remove(getCachePath("podcasts", file.Name()))
+				os.Remove(getCachePath("artworks", file.Name()))
+			}
+		}
 	}
 	return podcasts, nil
 }
