@@ -30,6 +30,7 @@ type RSS struct {
 		Title string        `xml:"title"`
 		Link  string        `xml:"link"`
 		Desc  string        `xml:"description"`
+		Author string       `xml:"author"`
 		Image struct {
 			Href string `xml:"href,attr"`
 			URL  string `xml:"url"`
@@ -117,7 +118,7 @@ func RequestRss(url string) (*RSS, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 6.1; rv:45.0) Gecko/20100101 Firefox/45.0")
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err

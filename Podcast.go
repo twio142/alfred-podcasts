@@ -19,6 +19,7 @@ import (
 
 type Podcast struct {
 	Name        string    `json:"name"`
+	Author      string    `json:"author"`
 	URL         string    `json:"url"`
 	Desc        string    `json:"desc"`
 	Image       string    `json:"image"`
@@ -205,7 +206,7 @@ func AddToLatest(url string, name string) {
 			return
 		}
 	}
-	if episode := FindEpisode(map[string]string{"url": url, "author": name}); episode != nil {
+	if episode := FindEpisode(map[string]string{"url": url, "podcast": name}); episode != nil {
 		latestEpisodes = append(latestEpisodes, episode)
 		data, _ := json.Marshal(latestEpisodes)
 		writeCache(getCachePath("latest"), data)
@@ -215,20 +216,32 @@ func AddToLatest(url string, name string) {
 func FindEpisode(args map[string]string) *Episode {
 	url := args["url"]
 	title := args["title"]
+	podcast := args["podcast"]
 	author := args["author"]
 	if url == "" && title == "" {
 		return nil
 	}
+	if podcast != "" {
+		p := &Podcast{Name: podcast}
+		p.GetEpisodes(false)
+		for _, e := range p.Episodes {
+			if (url != "" && e.URL == url) || (title != "" && e.Title == title) {
+				return &e
+			}
+		}
+	}
 	if author != "" {
-    if _, err := os.Stat(getCachePath("podcasts", author)); err == nil {
-      p := &Podcast{Name: author}
-      p.GetEpisodes(false)
-      for _, e := range p.Episodes {
-        if (url != "" && e.URL == url) || (title != "" && e.Title == title) {
-          return &e
-        }
-      }
-    }
+		GetAllPodcasts(false)
+		for _, p := range allPodcasts {
+			if p.Author == author {
+				for _, e := range p.Episodes {
+					if (url != "" && e.URL == url) || (title != "" && e.Title == title) {
+						return &e
+					}
+				}
+				break
+			}
+		}
 	}
 	for _, e := range GetLatestEpisodes(false) {
 		if (url != "" && e.URL == url) || (title != "" && e.Title == title) {
@@ -279,6 +292,7 @@ func (p *Podcast) GetEpisodes(force bool) error {
 		p.Desc = rss.desc()
 		p.Image = longestString(rss.Channel.Image.Href, rss.Channel.Image.URL)
 		p.Link = rss.Channel.Link
+		p.Author = rss.Channel.Author
 		for _, item := range rss.Channel.Items {
 			e := Episode{
 				Title:    strings.TrimSpace(strings.ReplaceAll(item.Title, "&amp;", "&")),

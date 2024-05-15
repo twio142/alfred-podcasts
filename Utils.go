@@ -95,7 +95,7 @@ func parseDate(dateStr string) time.Time {
 		}
 	}
 
-	return t
+	return t.In(time.Local)
 }
 
 func getCachePath(parts ...string) string {
