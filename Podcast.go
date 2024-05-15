@@ -220,13 +220,15 @@ func FindEpisode(args map[string]string) *Episode {
 		return nil
 	}
 	if author != "" {
-		p := &Podcast{Name: author}
-		p.GetEpisodes(false)
-		for _, e := range p.Episodes {
-			if (url != "" && e.URL == url) || (title != "" && e.Title == title) {
-				return &e
-			}
-		}
+    if _, err := os.Stat(getCachePath("podcasts", author)); err == nil {
+      p := &Podcast{Name: author}
+      p.GetEpisodes(false)
+      for _, e := range p.Episodes {
+        if (url != "" && e.URL == url) || (title != "" && e.Title == title) {
+          return &e
+        }
+      }
+    }
 	}
 	for _, e := range GetLatestEpisodes(false) {
 		if (url != "" && e.URL == url) || (title != "" && e.Title == title) {
