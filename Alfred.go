@@ -6,13 +6,15 @@ import (
 	"log"
 )
 
+type Icon struct {
+	Path string `json:"path"`
+}
+
 type Mod struct {
-	Valid    bool   `json:"valid"`
+	Valid    bool   `json:"valid,omitempty"`
 	Subtitle string `json:"subtitle,omitempty"`
 	Arg      string `json:"arg,omitempty"`
-	Icon     struct {
-		Path string `json:"path"`
-	} `json:"icon,omitempty"`
+	Icon     *Icon `json:"icon,omitempty"`
 	Variables map[string]string `json:"variables,omitempty"`
 }
 
@@ -27,27 +29,24 @@ type Item struct {
 	Title        string `json:"title"`
 	Subtitle     string `json:"subtitle,omitempty"`
 	Arg          string `json:"arg,omitempty"`
-	Valid        bool   `json:"valid"`
+	Valid        *bool  `json:"valid,omitempty"`
 	AutoComplete string `json:"autocomplete,omitempty"`
 	Type         string `json:"type,omitempty"`
 	Match        string `json:"match,omitempty"`
 	Text         struct {
 		Copy      string `json:"copy,omitempty"`
 		LargeType string `json:"largetype,omitempty"`
-	} `json:"text,omitempty"`
+	} `json:"text"`
 	QuickLookURL string `json:"quicklookurl,omitempty"`
-	Icon         struct {
-		Path string `json:"path"`
-	} `json:"icon,omitempty"`
+	Icon         *Icon `json:"icon,omitempty"`
 	Variables map[string]string `json:"variables,omitempty"`
 	Mods      struct {
-		Cmd      Mod `json:"cmd"`
-		Alt      Mod `json:"alt"`
-		Shift    Mod `json:"shift"`
-		Ctrl     Mod `json:"ctrl"`
-		AltShift Mod `json:"alt+shift"`
-	} `json:"mods,omitempty"`
-	SortKey interface{} `json:"-"`
+		Cmd      *Mod `json:"cmd,omitempty"`
+		Alt      *Mod `json:"alt,omitempty"`
+		Shift    *Mod `json:"shift,omitempty"`
+		Ctrl     *Mod `json:"ctrl,omitempty"`
+		AltShift *Mod `json:"alt+shift,omitempty"`
+	} `json:"mods"`
 }
 
 func (i *Item) SetVar(name string, value string) {
@@ -75,13 +74,12 @@ func (w *Workflow) WarnEmpty(s ...string) {
 	if len(s) > 1 && s[1] != "" {
 		icon = s[1]
 	}
+	valid := false
 	w.Items = []Item{
 		{
 			Title: title,
-			Valid: false,
-			Icon: struct {
-				Path string `json:"path"`
-			}{Path: icon},
+			Valid: &valid,
+			Icon: &Icon{Path: icon},
 		},
 	}
 }

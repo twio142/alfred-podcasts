@@ -92,8 +92,9 @@ func main() {
 	case "playing":
 		if e := FindEpisode(map[string]string{"title": os.Getenv("title"), "author": os.Getenv("artist")}); e != nil {
 			item := e.Format()
-			item.Valid = false
-			item.Mods.Cmd = Mod{}
+			valid := false
+			item.Valid = &valid
+			item.Mods.Cmd = nil
 			workflow.AddItem(item)
 		} else {
 			workflow.WarnEmpty("No Episode Found")
