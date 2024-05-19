@@ -233,11 +233,19 @@ func SavePlaylist() error {
 	if len(playlist) == 0 {
 		return fmt.Errorf("no episodes in playlist")
 	}
-	fileName := fmt.Sprintf("%s/Movies/Playlist (%dx) Podcast", os.Getenv("HOME"), len(playlist))
-	if len(playlist) > 1 {
-		fileName += "s"
-	}
-	fileName += ".m3u"
+	file := fmt.Sprintf("%s/playlist.m3u", cacheDir)
 	data := []byte(strings.Join(playlist, "\n"))
-	return os.WriteFile(fileName, data, 0644)
+	return os.WriteFile(file, data, 0644)
+}
+
+func LoadPlaylist() error {
+	file := fmt.Sprintf("%s/playlist.m3u", cacheDir)
+	if _, err := os.Stat(file); err != nil {
+		return err
+	}
+	if _, err := runCommand("loadlist", file); err != nil {
+		cmd := exec.Command("/usr/bin/open", file)
+		cmd.Run()
+	}
+	return nil
 }

@@ -69,6 +69,10 @@ func main() {
 	case "save":
 		SavePlaylist()
 		Notify("Playlist saved")
+	case "loadList":
+		if err := LoadPlaylist(); err != nil {
+			Notify("Error", err.Error())
+		}
 	default:
 		// do nothing
 	}

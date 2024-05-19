@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 )
 
 func ListPodcasts() {
@@ -68,12 +69,12 @@ func ListEpisodes() {
 			break
 		}
 		item := e.Format()
-		item.Subtitle = fmt.Sprintf("📻  %s  ·  %s", e.Author, item.Subtitle)
+		item.Subtitle = fmt.Sprintf("📻  %s  ·  %s", e.Podcast, item.Subtitle)
 		item.Match = matchString(e.Title)
 		item.AutoComplete = ""
 		alt := &Mod{Subtitle: "Refresh podcast", Icon: &Icon{Path: "icons/refresh.png"}}
 		alt.SetVar("action", "refresh")
-		alt.SetVar("podcast", e.Author)
+		alt.SetVar("podcast", e.Podcast)
 		item.Mods.Alt = alt
 		item.Mods.Shift = nil
 		workflow.AddItem(item)
@@ -89,7 +90,26 @@ func ListEpisodes() {
 func ListQueue() {
 	playlist, err := GetPlaylist()
 	if err != nil || len(playlist) == 0 {
-		workflow.WarnEmpty("No Episodes Found")
+		if fileInfo, err := os.Stat(fmt.Sprintf("%s/playlist.m3u", cacheDir)); err == nil {
+			days := int(time.Since(fileInfo.ModTime()).Hours() / 24)
+			since := fmt.Sprintf("%d days ago", days)
+			if days == 0 {
+				since = "today"
+			} else if days == 1 {
+				since = "yesterday"
+			}
+			item := &Item{
+				Title:    "No Episodes Found",
+				Subtitle: fmt.Sprintf("Load saved playlist (%s)", since),
+				Arg:			fmt.Sprintf("%s/playlist.m3u", cacheDir),
+				Type: 	  "file",
+				Icon:     &Icon{Path: "icons/save.png"},
+			}
+			item.SetVar("action", "loadList")
+			workflow.AddItem(item)
+		} else {
+			workflow.WarnEmpty("No Episodes Found")
+		}
 		return
 	}
 	var episodes []*Episode
@@ -174,7 +194,7 @@ func (p *Podcast) Format() *Item {
 }
 
 func (e *Episode) Format() *Item {
-	var icon = getCachePath("artworks", e.Author)
+	var icon = getCachePath("artworks", e.Podcast)
 	if _, err := os.Stat(icon); err != nil {
 		icon = ""
 	}
@@ -184,8 +204,8 @@ func (e *Episode) Format() *Item {
     Arg:         e.URL,
 		QuickLookURL: e.CacheShownote(),
 		Icon: &Icon{Path: icon},
-		Match:        matchString(e.Title, e.Author),
-		AutoComplete: e.Author,
+		Match:        matchString(e.Title, e.Podcast),
+		AutoComplete: e.Podcast,
 		Mods: struct {
 			Cmd      *Mod `json:"cmd,omitempty"`
 			Alt      *Mod `json:"alt,omitempty"`
@@ -195,7 +215,7 @@ func (e *Episode) Format() *Item {
 		}{},
 	}
 	item.SetVar("actionKeep", "addToQueue")
-	item.SetVar("podcast", e.Author)
+	item.SetVar("podcast", e.Podcast)
 	item.SetVar("url", e.URL)
 
 	cmd := &Mod{Subtitle: "Play now", Icon: &Icon{Path: "icons/play.png"}}
@@ -203,9 +223,9 @@ func (e *Episode) Format() *Item {
 	cmd.SetVar("url", e.URL)
 	item.Mods.Cmd = cmd
 
-	shift := &Mod{Subtitle: "List " + e.Author}
+	shift := &Mod{Subtitle: "List " + e.Podcast}
 	shift.SetVar("trigger", "episodes")
-	shift.SetVar("podcast", e.Author)
+	shift.SetVar("podcast", e.Podcast)
 	item.Mods.Shift = shift
 	return &item
 }

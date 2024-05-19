@@ -32,7 +32,7 @@ type Episode struct {
 	Title    string    `json:"title"`
 	URL      string    `json:"url"`
 	Html     string    `json:"html"`
-	Author   string    `json:"author"`
+	Podcast   string    `json:"podcast"`
 	Date     time.Time `json:"date"`
 	Duration int       `json:"duration"`
 	Image    string    `json:"image"`
@@ -202,7 +202,7 @@ func AddToLatest(url string, name string) {
 	}
 	latestEpisodes := GetLatestEpisodes(false)
 	for _, episode := range latestEpisodes {
-		if episode.URL == url && episode.Author == name {
+		if episode.URL == url && episode.Podcast == name {
 			return
 		}
 	}
@@ -298,7 +298,7 @@ func (p *Podcast) GetEpisodes(force bool) error {
 				Title:    strings.TrimSpace(strings.ReplaceAll(item.Title, "&amp;", "&")),
 				Html:     longestString(item.Desc, item.Content, item.Summary),
 				Date:     parseDate(item.Date),
-				Author:   p.Name,
+				Podcast:   p.Name,
 				Duration: calculateDuration(item.Duration),
 				Image:    longestString(item.Image.Href, item.Image.URL, p.Image),
 			}
@@ -321,7 +321,7 @@ func (p *Podcast) GetEpisodes(force bool) error {
 }
 
 func (e *Episode) CacheShownote() string {
-	path := getCachePath("shownotes", fmt.Sprintf("%s_%s.md", e.Author, e.Title))
+	path := getCachePath("shownotes", fmt.Sprintf("%s_%s.md", e.Podcast, e.Title))
 	if _, err := os.Stat(path); err == nil {
 		return path
 	}
