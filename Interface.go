@@ -12,7 +12,7 @@ func ListPodcasts() {
 		item := Item{
 			Title:    "No Podcasts Found",
 			Subtitle: "Refresh",
-			Icon: &Icon{Path: "icons/refresh.png"},
+			Icon:     &Icon{Path: "icons/refresh.png"},
 		}
 		item.SetVar("action", "refreshAll")
 		workflow.AddItem(&item)
@@ -29,7 +29,7 @@ func ListLatest() {
 		item := Item{
 			Title:    "No Episodes Found",
 			Subtitle: "Refresh all podcasts",
-			Icon: &Icon{Path: "icons/refresh.png"},
+			Icon:     &Icon{Path: "icons/refresh.png"},
 		}
 		item.SetVar("action", "refreshAll")
 		workflow.AddItem(&item)
@@ -58,7 +58,7 @@ func ListEpisodes() {
 		item := Item{
 			Title:    "No Episodes Found",
 			Subtitle: "Refresh podcast",
-			Icon: &Icon{Path: "icons/refresh.png"},
+			Icon:     &Icon{Path: "icons/refresh.png"},
 		}
 		item.SetVar("action", "refresh")
 		workflow.AddItem(&item)
@@ -81,7 +81,7 @@ func ListEpisodes() {
 	}
 	item := Item{
 		Title: "Go Back",
-		Icon: &Icon{Path: "icons/back.png"},
+		Icon:  &Icon{Path: "icons/back.png"},
 	}
 	item.SetVar("trigger", "podcasts")
 	workflow.AddItem(&item)
@@ -101,8 +101,8 @@ func ListQueue() {
 			item := &Item{
 				Title:    "No Episodes Found",
 				Subtitle: fmt.Sprintf("Load saved playlist (%s)", since),
-				Arg:			fmt.Sprintf("%s/playlist.m3u", cacheDir),
-				Type: 	  "file",
+				Arg:      fmt.Sprintf("%s/playlist.m3u", cacheDir),
+				Type:     "file",
 				Icon:     &Icon{Path: "icons/save.png"},
 			}
 			item.SetVar("action", "loadList")
@@ -151,7 +151,7 @@ func ListQueue() {
 	if len(episodes) == 0 {
 		workflow.WarnEmpty("No Episodes Found")
 	} else {
-		workflow.AddItem(PlayerControl(episodes))
+		workflow.UnshiftItem(PlayerControl(episodes))
 	}
 }
 
@@ -205,9 +205,9 @@ func (e *Episode) Format() *Item {
 	var item = Item{
 		Title:        e.Title,
 		Subtitle:     fmt.Sprintf("🗓  %s  ·  ⌛️ %s", e.Date.Format("Mon, 2006-01-02"), formatDuration(e.Duration)),
-    Arg:         e.URL,
+		Arg:          e.URL,
 		QuickLookURL: e.CacheShownote(),
-		Icon: &Icon{Path: icon},
+		Icon:         &Icon{Path: icon},
 		Match:        matchString(e.Title, e.Podcast),
 		AutoComplete: e.Podcast,
 		Mods: struct {

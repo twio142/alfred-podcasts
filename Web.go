@@ -25,13 +25,13 @@ type Opml struct {
 }
 
 type RSS struct {
-	Channel struct {
-		Items []ChannelItem `xml:"item"`
-		Title string        `xml:"title"`
-		Link  string        `xml:"link"`
-		Desc  string        `xml:"description"`
-		Author string       `xml:"author"`
-		Image struct {
+	Channel  struct {
+		Items   []ChannelItem `xml:"item"`
+		Title   string        `xml:"title"`
+		Link    string        `xml:"link"`
+		Desc    string        `xml:"description"`
+		Author  string       `xml:"author"`
+		Image   struct {
 			Href string `xml:"href,attr"`
 			URL  string `xml:"url"`
 		} `xml:"image"`
@@ -45,15 +45,15 @@ type ChannelItem struct {
 	Content   string `xml:"content:encoded"`
 	Date      string `xml:"pubDate"`
 	Enclosure struct {
-		URL string `xml:"url,attr"`
+		URL  string `xml:"url,attr"`
 	} `xml:"enclosure"`
-	Link     string `xml:"link"`
-	Duration string `xml:"duration"`
-	Image    struct {
+	Link      string `xml:"link"`
+	Duration  string `xml:"duration"`
+	Image     struct {
 		Href string `xml:"href,attr"`
 		URL  string `xml:"url"`
 	} `xml:"image"`
-	Summary string `xml:"summary"`
+	Summary   string `xml:"summary"`
 }
 
 func RequestOpml() (*Opml, error) {

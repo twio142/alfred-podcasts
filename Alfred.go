@@ -11,10 +11,10 @@ type Icon struct {
 }
 
 type Mod struct {
-	Valid    bool   `json:"valid,omitempty"`
-	Subtitle string `json:"subtitle,omitempty"`
-	Arg      string `json:"arg,omitempty"`
-	Icon     *Icon `json:"icon,omitempty"`
+	Valid     bool              `json:"valid,omitempty"`
+	Subtitle  string            `json:"subtitle,omitempty"`
+	Arg       string            `json:"arg,omitempty"`
+	Icon      *Icon             `json:"icon,omitempty"`
 	Variables map[string]string `json:"variables,omitempty"`
 }
 
@@ -37,10 +37,10 @@ type Item struct {
 		Copy      string `json:"copy,omitempty"`
 		LargeType string `json:"largetype,omitempty"`
 	} `json:"text"`
-	QuickLookURL string `json:"quicklookurl,omitempty"`
-	Icon         *Icon `json:"icon,omitempty"`
-	Variables map[string]string `json:"variables,omitempty"`
-	Mods      struct {
+	QuickLookURL string            `json:"quicklookurl,omitempty"`
+	Icon         *Icon             `json:"icon,omitempty"`
+	Variables    map[string]string `json:"variables,omitempty"`
+	Mods         struct {
 		Cmd      *Mod `json:"cmd,omitempty"`
 		Alt      *Mod `json:"alt,omitempty"`
 		Shift    *Mod `json:"shift,omitempty"`
@@ -65,6 +65,10 @@ func (w *Workflow) AddItem(item *Item) {
 	w.Items = append(w.Items, *item)
 }
 
+func (w *Workflow) UnshiftItem(item *Item) {
+	w.Items = append([]Item{*item}, w.Items...)
+}
+
 func (w *Workflow) WarnEmpty(s ...string) {
 	var title = "No Result Found"
 	if len(s) > 0 && s[0] != "" {
@@ -79,7 +83,7 @@ func (w *Workflow) WarnEmpty(s ...string) {
 		{
 			Title: title,
 			Valid: &valid,
-			Icon: &Icon{Path: icon},
+			Icon:  &Icon{Path: icon},
 		},
 	}
 }

@@ -289,8 +289,10 @@ func (p *Podcast) GetEpisodes(force bool) error {
 		if err != nil {
 			return err
 		}
-		p.Name = strings.TrimSpace(rss.Channel.Title)
-		path = getCachePath("podcasts", p.Name)
+		if p.Name == "" {
+			p.Name = strings.TrimSpace(rss.Channel.Title)
+			path = getCachePath("podcasts", p.Name)
+		}
 		p.Desc = rss.desc()
 		p.Image = longestString(rss.Channel.Image.Href, rss.Channel.Image.URL)
 		p.Link = rss.Channel.Link
