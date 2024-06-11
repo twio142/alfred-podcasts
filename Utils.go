@@ -146,12 +146,13 @@ func refreshInBackground() {
 }
 
 func Notify(message string, t ...string) {
-	title := "Podcasts"
-	if len(t) > 0 && t[0] != "" {
-		title = t[0]
-	}
 	cmd := exec.Command("terminal-notifier")
-	cmd.Args = append(cmd.Args, "-message", message, "-sender", "com.runningwithcrayons.Alfred", "-contentImage", "icons/podcast.png", "-title", title)
+	cmd.Args = append(cmd.Args, "-message", message, "-sender", "com.runningwithcrayons.Alfred", "-contentImage", "icons/podcast.png", "-title")
+	if len(t) > 0 && t[0] != "" {
+		cmd.Args = append(cmd.Args, t[0])
+	} else {
+		cmd.Args = append(cmd.Args, "Podcasts")
+	}
 	if err := cmd.Run(); err != nil {
 		log.Println(err)
 	}

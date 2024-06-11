@@ -44,21 +44,21 @@ func main() {
 		defer os.Remove(getCachePath("podcasts.lock"))
 	case "addToQueue":
 		if err := AddToPlaylist(url); err != nil {
-			Notify("Error", err.Error())
+			Notify(err.Error(), "Error")
 		} else if trigger != "queue" {
 			AddToLatest(url, os.Getenv("podcast"))
 		}
 	case "play":
 		if err := PlayEpisode(url); err != nil {
-			Notify("Error", err.Error())
+			Notify(err.Error(), "Error")
 		}
 	case "playNext":
 		if err := PlayEpisode(url, true); err != nil {
-			Notify("Error", err.Error())
+			Notify(err.Error(), "Error")
 		}
 	case "remove":
 		if err := RemoveFromPlaylist(url); err != nil {
-			Notify("Error", err.Error())
+			Notify(err.Error(), "Error")
 		}
 	case "playPause":
 		PlayPause()
@@ -71,7 +71,14 @@ func main() {
 		Notify("Playlist saved")
 	case "loadList":
 		if err := LoadPlaylist(); err != nil {
-			Notify("Error", err.Error())
+			Notify(err.Error(), "Error")
+		}
+	case "subscribe":
+		podcast, err := SubscribeNewFeed(&Podcast{URL: os.Args[1]})
+		if err != nil {
+			Notify(err.Error(), "Error")
+		} else {
+			Notify("Subscribed to " + podcast.Name)
 		}
 	default:
 		// do nothing

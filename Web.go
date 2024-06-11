@@ -56,7 +56,7 @@ type ChannelItem struct {
 	Summary string `xml:"summary"`
 }
 
-func RequestFeeds() ([]*Podcast, error) {
+func RequestOpml() (*Opml, error) {
 	opmlUrl := os.Getenv("FEEDS_URL")
 	apiToken := os.Getenv("API_TOKEN")
 	if opmlUrl == "" {
@@ -82,7 +82,14 @@ func RequestFeeds() ([]*Podcast, error) {
 		log.Println("Error parsing XML:", err)
 		return nil, err
 	}
+	return &opml, nil
+}
 
+func RequestFeeds() ([]*Podcast, error) {
+	opml, err := RequestOpml()
+	if err != nil {
+		return nil, err
+	}
 	var podcasts []*Podcast
 	for _, outline := range opml.Body.Outlines.Feeds {
 		podcast := Podcast{Name: outline.Text, URL: outline.Url}
@@ -108,6 +115,32 @@ func RequestFeeds() ([]*Podcast, error) {
 		}
 	}
 	return podcasts, nil
+}
+
+func SubscribeNewFeed(podcast *Podcast) (*Podcast, error) {
+	u, err := url.Parse(podcast.URL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid URL")
+	}
+	podcast.URL = strings.TrimSpace(u.String())
+	rss, err := RequestRss(podcast.URL)
+	if err != nil {
+		return nil, err
+	}
+	podcast.Name = rss.Channel.Title
+	opml, err := RequestOpml()
+	if err != nil {
+		return nil, err
+	}
+	opml.Body.Outlines.Feeds = append(opml.Body.Outlines.Feeds, struct {
+		Text string `xml:"text,attr"`
+		Url  string `xml:"xmlUrl,attr"`
+	}{Text: podcast.Name, Url: podcast.URL})
+	xmlData, err := xml.MarshalIndent(opml, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	return podcast, UpdateFileAndCommit(string(xmlData))
 }
 
 func RequestRss(url string) (*RSS, error) {
