@@ -32,7 +32,7 @@ type Episode struct {
 	Title    string    `json:"title"`
 	URL      string    `json:"url"`
 	Html     string    `json:"html"`
-	Podcast   string    `json:"podcast"`
+	Podcast  string    `json:"podcast"`
 	Date     time.Time `json:"date"`
 	Duration int       `json:"duration"`
 	Image    string    `json:"image"`
@@ -289,6 +289,8 @@ func (p *Podcast) GetEpisodes(force bool) error {
 		if err != nil {
 			return err
 		}
+		p.Name = strings.TrimSpace(rss.Channel.Title)
+		path = getCachePath("podcasts", p.Name)
 		p.Desc = rss.desc()
 		p.Image = longestString(rss.Channel.Image.Href, rss.Channel.Image.URL)
 		p.Link = rss.Channel.Link
@@ -298,7 +300,7 @@ func (p *Podcast) GetEpisodes(force bool) error {
 				Title:    strings.TrimSpace(strings.ReplaceAll(item.Title, "&amp;", "&")),
 				Html:     longestString(item.Desc, item.Content, item.Summary),
 				Date:     parseDate(item.Date),
-				Podcast:   p.Name,
+				Podcast:  p.Name,
 				Duration: calculateDuration(item.Duration),
 				Image:    longestString(item.Image.Href, item.Image.URL, p.Image),
 			}
@@ -318,6 +320,11 @@ func (p *Podcast) GetEpisodes(force bool) error {
 		writeCache(path, data)
 	}
 	return nil
+}
+
+func (p *Podcast) ClearCache() {
+	os.Remove(getCachePath("podcasts", p.Name))
+	os.Remove(getCachePath("artworks", p.Name))
 }
 
 func (e *Episode) CacheShownote() string {

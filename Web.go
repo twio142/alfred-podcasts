@@ -123,11 +123,9 @@ func SubscribeNewFeed(podcast *Podcast) (*Podcast, error) {
 		return nil, fmt.Errorf("invalid URL")
 	}
 	podcast.URL = strings.TrimSpace(u.String())
-	rss, err := RequestRss(podcast.URL)
-	if err != nil {
+	if err := podcast.GetEpisodes(true); err != nil {
 		return nil, err
 	}
-	podcast.Name = rss.Channel.Title
 	opml, err := RequestOpml()
 	if err != nil {
 		return nil, err
@@ -136,6 +134,33 @@ func SubscribeNewFeed(podcast *Podcast) (*Podcast, error) {
 		Text string `xml:"text,attr"`
 		Url  string `xml:"xmlUrl,attr"`
 	}{Text: podcast.Name, Url: podcast.URL})
+	xmlData, err := xml.MarshalIndent(opml, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	return podcast, UpdateFileAndCommit(string(xmlData))
+}
+
+func UnsubscribeFeed(podcast *Podcast) (*Podcast, error) {
+	opml, err := RequestOpml()
+	if err != nil {
+		return nil, err
+	}
+	var feeds []struct {
+		Text string `xml:"text,attr"`
+		Url  string `xml:"xmlUrl,attr"`
+	}
+	for _, feed := range opml.Body.Outlines.Feeds {
+		if feed.Url == podcast.URL {
+			podcast.Name = feed.Text
+		} else {
+			feeds = append(feeds, feed)
+		}
+	}
+	if len(feeds) == len(opml.Body.Outlines.Feeds) {
+		return nil, fmt.Errorf("feed not found")
+	}
+	opml.Body.Outlines.Feeds = feeds
 	xmlData, err := xml.MarshalIndent(opml, "", "    ")
 	if err != nil {
 		return nil, err

@@ -80,6 +80,14 @@ func main() {
 		} else {
 			Notify("Subscribed to " + podcast.Name)
 		}
+	case "unsubscribe":
+		podcast, err := UnsubscribeFeed(&Podcast{URL: os.Args[1]})
+		if err != nil {
+			Notify(err.Error(), "Error")
+		} else {
+			Notify("Unsubscribed from " + podcast.Name)
+			podcast.ClearCache()
+		}
 	default:
 		// do nothing
 	}

@@ -190,6 +190,10 @@ func (p *Podcast) Format() *Item {
 	altShift := &Mod{Subtitle: "Refresh all podcasts", Icon: &Icon{Path: "icons/refresh.png"}}
 	altShift.SetVar("action", "refreshAll")
 	item.Mods.AltShift = altShift
+
+	ctrl := &Mod{Subtitle: "Unsubscribe", Icon: &Icon{Path: "icons/trash.png"}, Arg: p.URL}
+	ctrl.SetVar("action", "unsubscribe")
+	item.Mods.Ctrl = ctrl
 	return &item
 }
 
