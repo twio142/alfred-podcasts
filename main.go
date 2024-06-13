@@ -57,7 +57,7 @@ func main() {
 			Notify(err.Error(), "Error")
 		}
 	case "remove":
-		if err := RemoveFromPlaylist(url); err != nil {
+		if err := RemoveFromPlaylist(os.Getenv("id")); err != nil {
 			Notify(err.Error(), "Error")
 		}
 	case "playPause":

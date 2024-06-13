@@ -110,7 +110,7 @@ func PlayEpisode(url string, n ...bool) error {
 		if item.Current {
 			to = idx
 		}
-		if item.Filename == url {
+		if to > 0 && item.Filename == url {
 			from = idx
 		}
 	}
@@ -151,16 +151,17 @@ func PlayPause(p ...bool) error {
 	}
 }
 
-func RemoveFromPlaylist(url string) error {
-	if url == "" {
-		return fmt.Errorf("no episode URL provided")
+func RemoveFromPlaylist(i string) error {
+	id, err := strconv.Atoi(i)
+	if err != nil {
+		return fmt.Errorf("invalid episode ID")
 	}
 	playlist, err := GetPlaylist()
 	if err != nil {
 		return err
 	}
 	for x, item := range playlist {
-		if item.Filename == url {
+		if item.ID == id {
 			if item.Current {
 				if _, err = runCommand("playlist-next"); err != nil {
 					return err

@@ -140,7 +140,7 @@ func ListQueue() {
 				}
 				ctrl := &Mod{Subtitle: "Remove from queue", Icon: &Icon{Path: "icons/trash.png"}}
 				ctrl.SetVar("action", "remove")
-				ctrl.SetVar("url", e.URL)
+				ctrl.SetVar("id", i.ID)
 				item.Mods.Ctrl = ctrl
 				workflow.AddItem(item)
 				episodes = append(episodes, e)
