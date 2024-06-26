@@ -65,7 +65,7 @@ func ListEpisodes() {
 		return
 	}
 	for i, e := range podcast.Episodes {
-		if i > 20 {
+		if i > 30 {
 			break
 		}
 		item := e.Format()

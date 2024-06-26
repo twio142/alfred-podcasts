@@ -259,7 +259,7 @@ func (p *Podcast) CacheArtwork() {
 }
 
 func (p *Podcast) GetEpisodes(force bool) error {
-	var maxAge = 24 * time.Hour
+	var maxAge = 12 * time.Hour
 	if force {
 		maxAge = 0
 	} else if len(p.Episodes) > 0 {
