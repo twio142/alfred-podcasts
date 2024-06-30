@@ -69,7 +69,7 @@ func ListEpisodes() {
 			break
 		}
 		item := e.Format()
-		item.Subtitle = fmt.Sprintf("📻  %s  ·  %s", e.Podcast, item.Subtitle)
+		item.Subtitle = fmt.Sprintf("􀪔 %s  ·  %s", e.Podcast, item.Subtitle)
 		item.Match = matchString(e.Title)
 		item.AutoComplete = ""
 		alt := &Mod{Subtitle: "Refresh podcast", Icon: &Icon{Path: "icons/refresh.png"}}
@@ -204,7 +204,7 @@ func (e *Episode) Format() *Item {
 	}
 	var item = Item{
 		Title:        e.Title,
-		Subtitle:     fmt.Sprintf("🗓  %s  ·  ⌛️ %s", e.Date.Format("Mon, 2006-01-02"), formatDuration(e.Duration)),
+		Subtitle:     fmt.Sprintf("􀉉 %s  ·  􀖈 %s", e.Date.Format("Mon, 2006-01-02"), formatDuration(e.Duration)),
 		Arg:          e.URL,
 		QuickLookURL: e.CacheShownote(),
 		Icon:         &Icon{Path: icon},
@@ -227,7 +227,7 @@ func (e *Episode) Format() *Item {
 	cmd.SetVar("url", e.URL)
 	item.Mods.Cmd = cmd
 
-	shift := &Mod{Subtitle: "List " + e.Podcast}
+	shift := &Mod{Subtitle: "􀪔 " + e.Podcast}
 	shift.SetVar("trigger", "episodes")
 	shift.SetVar("podcast", e.Podcast)
 	item.Mods.Shift = shift
