@@ -91,6 +91,12 @@ func AddToPlaylist(u string) error {
 		cmd := exec.Command("/usr/bin/open", "iina://weblink?url="+url.QueryEscape(u))
 		return cmd.Run()
 	}
+	playlist, _ := GetPlaylist()
+	for _, item := range playlist {
+		if item.Filename == u {
+			return nil
+		}
+	}
 	_, err := runCommand("loadfile", u, "append")
 	return err
 }
@@ -200,7 +206,7 @@ func PlayerControl(episodes []*Episode) *Item {
 	item := Item{
 		Title:    title,
 		Subtitle: fmt.Sprintf("%s  %s  - %s", formatDuration(playback), progressBar, formatDuration(remain)),
-		Icon: &Icon{Path: "icons/playpause.png"},
+		Icon:     &Icon{Path: "icons/playpause.png"},
 	}
 	item.SetVar("actionKeep", "playPause")
 
