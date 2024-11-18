@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
+	"net/url"
 	"os"
 	"strings"
-	"net/url"
-	"encoding/base64"
 
 	"github.com/shurcooL/githubv4"
 	"golang.org/x/oauth2"
@@ -31,7 +31,7 @@ func UpdateFileAndCommit(content string) error {
 	filePath := strings.Join(segments[4:], "/")
 
 	var query struct {
-    Repository struct {
+		Repository struct {
 			Ref struct {
 				Target struct {
 					Commit struct {
@@ -39,12 +39,12 @@ func UpdateFileAndCommit(content string) error {
 					} `graphql:"... on Commit"`
 				}
 			} `graphql:"ref(qualifiedName: $qualifiedName)"`
-    } `graphql:"repository(owner: $owner, name: $name)"`
+		} `graphql:"repository(owner: $owner, name: $name)"`
 	}
 	variables := map[string]interface{}{
-		"owner":           githubv4.String(username),
-		"name":            githubv4.String(repoName),
-		"qualifiedName":   githubv4.String(branchName),
+		"owner":         githubv4.String(username),
+		"name":          githubv4.String(repoName),
+		"qualifiedName": githubv4.String(branchName),
 	}
 	err = client.Query(context.Background(), &query, variables)
 	if err != nil {
