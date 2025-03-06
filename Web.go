@@ -74,6 +74,10 @@ func RequestOpml() (*Opml, error) {
 		log.Println("Error fetching OPML feeds:", err)
 		return nil, err
 	}
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("HTTP request failed with status %d", resp.StatusCode)
+		return nil, fmt.Errorf("HTTP request failed with status %d", resp.StatusCode)
+	}
 	defer resp.Body.Close()
 
 	byteValue, _ := io.ReadAll(resp.Body)
