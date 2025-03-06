@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func runCommand(command ...string) (interface{}, error) {
+func runCommand(command ...string) (any, error) {
 	if len(command) == 0 {
 		return "", fmt.Errorf("no command provided")
 	}
@@ -21,7 +21,7 @@ func runCommand(command ...string) (interface{}, error) {
 	}
 	go func() {
 		defer stdin.Close()
-		json.NewEncoder(stdin).Encode(map[string]interface{}{
+		json.NewEncoder(stdin).Encode(map[string]any{
 			"command": command,
 		})
 	}()
@@ -30,8 +30,8 @@ func runCommand(command ...string) (interface{}, error) {
 		return "", err
 	}
 	var result struct {
-		Data  interface{} `json:"data"`
-		Error string      `json:"error"`
+		Data  any    `json:"data"`
+		Error string `json:"error"`
 	}
 	if err = json.Unmarshal(out, &result); err != nil {
 		return "", err
@@ -55,14 +55,14 @@ func GetPlaylist() ([]PlaylistItem, error) {
 	if err != nil {
 		return nil, err
 	}
-	dataSlice, ok := data.([]interface{})
+	dataSlice, ok := data.([]any)
 	if !ok {
 		return nil, fmt.Errorf("unexpected data type: %T", data)
 	}
 
 	var playlist []PlaylistItem
 	for _, item := range dataSlice {
-		itemMap, ok := item.(map[string]interface{})
+		itemMap, ok := item.(map[string]any)
 		if ok {
 			playlistItem := PlaylistItem{
 				Filename: itemMap["filename"].(string),
@@ -111,7 +111,7 @@ func PlayEpisode(url string, n ...bool) error {
 		return err
 	}
 	var to int
-	var from = -1
+	from := -1
 	for idx, item := range playlist {
 		if item.Current {
 			to = idx
@@ -121,7 +121,7 @@ func PlayEpisode(url string, n ...bool) error {
 		}
 	}
 	if from == -1 {
-		if err := AddToPlaylist(url); err != nil {
+		if err = AddToPlaylist(url); err != nil {
 			return err
 		}
 		from = len(playlist)
@@ -145,7 +145,7 @@ func PlayEpisode(url string, n ...bool) error {
 
 func PlayPause(p ...bool) error {
 	if len(p) > 0 {
-		var pause = "no"
+		pause := "no"
 		if !p[0] {
 			pause = "yes"
 		}
@@ -185,8 +185,8 @@ func PlayerControl(episodes []*Episode) *Item {
 	if p, err := runCommand("get_property", "playback-time"); err == nil {
 		playback = int(p.(float64))
 	}
-	var remain = episodes[0].Duration - playback
-	var totalRemain = -playback
+	remain := episodes[0].Duration - playback
+	totalRemain := -playback
 	for _, e := range episodes {
 		totalRemain += e.Duration
 	}

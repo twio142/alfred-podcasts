@@ -48,7 +48,7 @@ func ListEpisodes() {
 	name := os.Getenv("podcast")
 	if podcast == nil {
 		podcast = &Podcast{Name: name}
-		podcast.GetEpisodes(false)
+    podcast.GetEpisodes(false)
 		workflow.SetVar("podcast", name)
 	}
 	if podcast == nil {
@@ -93,9 +93,10 @@ func ListQueue() {
 		if fileInfo, err := os.Stat(fmt.Sprintf("%s/playlist.m3u", cacheDir)); err == nil {
 			days := int(time.Since(fileInfo.ModTime()).Hours() / 24)
 			since := fmt.Sprintf("%d days ago", days)
-			if days == 0 {
+			switch days {
+			case 0:
 				since = "today"
-			} else if days == 1 {
+			case 1:
 				since = "yesterday"
 			}
 			item := &Item{
@@ -156,12 +157,12 @@ func ListQueue() {
 }
 
 func (p *Podcast) Format() *Item {
-	var icon = getCachePath("artworks", p.Name)
+	icon := getCachePath("artworks", p.Name)
 	_, err := os.Stat(icon)
 	if err != nil {
 		icon = ""
 	}
-	var item = Item{
+	item := Item{
 		Title:        p.Name,
 		Subtitle:     p.Desc,
 		Match:        matchString(p.Name),
@@ -198,11 +199,11 @@ func (p *Podcast) Format() *Item {
 }
 
 func (e *Episode) Format() *Item {
-	var icon = getCachePath("artworks", e.Podcast)
+	icon := getCachePath("artworks", e.Podcast)
 	if _, err := os.Stat(icon); err != nil {
 		icon = ""
 	}
-	var item = Item{
+	item := Item{
 		Title:        e.Title,
 		Subtitle:     fmt.Sprintf("􀉉 %s  ·  􀖈 %s", e.Date.Format("Mon, 2006-01-02"), formatDuration(e.Duration)),
 		Arg:          e.URL,

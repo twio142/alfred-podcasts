@@ -18,20 +18,20 @@ type Opml struct {
 		Outlines struct {
 			Feeds []struct {
 				Text string `xml:"text,attr"`
-				Url  string `xml:"xmlUrl,attr"`
+				URL  string `xml:"xmlUrl,attr"`
 			} `xml:"outline"`
 		} `xml:"outline"`
 	} `xml:"body"`
 }
 
 type RSS struct {
-	Channel  struct {
-		Items   []ChannelItem `xml:"item"`
-		Title   string        `xml:"title"`
-		Link    string        `xml:"link"`
-		Desc    string        `xml:"description"`
-		Author  string       `xml:"author"`
-		Image   struct {
+	Channel struct {
+		Items  []ChannelItem `xml:"item"`
+		Title  string        `xml:"title"`
+		Link   string        `xml:"link"`
+		Desc   string        `xml:"description"`
+		Author string        `xml:"author"`
+		Image  struct {
 			Href string `xml:"href,attr"`
 			URL  string `xml:"url"`
 		} `xml:"image"`
@@ -45,27 +45,27 @@ type ChannelItem struct {
 	Content   string `xml:"content:encoded"`
 	Date      string `xml:"pubDate"`
 	Enclosure struct {
-		URL  string `xml:"url,attr"`
+		URL string `xml:"url,attr"`
 	} `xml:"enclosure"`
-	Link      string `xml:"link"`
-	Duration  string `xml:"duration"`
-	Image     struct {
+	Link     string `xml:"link"`
+	Duration string `xml:"duration"`
+	Image    struct {
 		Href string `xml:"href,attr"`
 		URL  string `xml:"url"`
 	} `xml:"image"`
-	Summary   string `xml:"summary"`
+	Summary string `xml:"summary"`
 }
 
 func RequestOpml() (*Opml, error) {
-	opmlUrl := os.Getenv("FEEDS_URL")
+	opmlURL := os.Getenv("FEEDS_URL")
 	apiToken := os.Getenv("API_TOKEN")
-	if opmlUrl == "" {
+	if opmlURL == "" {
 		return nil, fmt.Errorf("FEEDS_URL is required")
 	}
 	httpClient := &http.Client{
 		Timeout: 5 * time.Second,
 	}
-	req, _ := http.NewRequest("GET", opmlUrl, nil)
+	req, _ := http.NewRequest("GET", opmlURL, nil)
 	if apiToken != "" {
 		req.Header.Set("Authorization", "Bearer "+apiToken)
 	}
@@ -92,7 +92,7 @@ func RequestFeeds() ([]*Podcast, error) {
 	}
 	var podcasts []*Podcast
 	for _, outline := range opml.Body.Outlines.Feeds {
-		podcast := Podcast{Name: outline.Text, URL: outline.Url}
+		podcast := Podcast{Name: outline.Text, URL: outline.URL}
 		podcasts = append(podcasts, &podcast)
 	}
 	if files, err := os.ReadDir(getCachePath("podcasts")); err == nil {
@@ -123,7 +123,7 @@ func SubscribeNewFeed(podcast *Podcast) (*Podcast, error) {
 		return nil, fmt.Errorf("invalid URL")
 	}
 	podcast.URL = strings.TrimSpace(u.String())
-	if err := podcast.GetEpisodes(true); err != nil {
+	if err = podcast.GetEpisodes(true); err != nil {
 		return nil, err
 	}
 	opml, err := RequestOpml()
@@ -132,8 +132,8 @@ func SubscribeNewFeed(podcast *Podcast) (*Podcast, error) {
 	}
 	opml.Body.Outlines.Feeds = append(opml.Body.Outlines.Feeds, struct {
 		Text string `xml:"text,attr"`
-		Url  string `xml:"xmlUrl,attr"`
-	}{Text: podcast.Name, Url: podcast.URL})
+		URL  string `xml:"xmlUrl,attr"`
+	}{Text: podcast.Name, URL: podcast.URL})
 	xmlData, err := xml.MarshalIndent(opml, "", "    ")
 	if err != nil {
 		return nil, err
@@ -148,10 +148,10 @@ func UnsubscribeFeed(podcast *Podcast) (*Podcast, error) {
 	}
 	var feeds []struct {
 		Text string `xml:"text,attr"`
-		Url  string `xml:"xmlUrl,attr"`
+		URL  string `xml:"xmlUrl,attr"`
 	}
 	for _, feed := range opml.Body.Outlines.Feeds {
-		if feed.Url == podcast.URL {
+		if feed.URL == podcast.URL {
 			podcast.Name = feed.Text
 		} else {
 			feeds = append(feeds, feed)
@@ -169,7 +169,7 @@ func UnsubscribeFeed(podcast *Podcast) (*Podcast, error) {
 }
 
 func RequestRss(url string) (*RSS, error) {
-	var client = &http.Client{
+	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
 	req, err := http.NewRequest("GET", url, nil)

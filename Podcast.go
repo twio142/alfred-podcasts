@@ -31,7 +31,7 @@ type Podcast struct {
 type Episode struct {
 	Title    string    `json:"title"`
 	URL      string    `json:"url"`
-	Html     string    `json:"html"`
+	HTML     string    `json:"html"`
 	Podcast  string    `json:"podcast"`
 	Date     time.Time `json:"date"`
 	Duration int       `json:"duration"`
@@ -111,7 +111,7 @@ func GetAllPodcasts(force bool) error {
 
 func GetLatestEpisodes(force bool) []*Episode {
 	var episodes []*Episode
-	var maxAge = time.Duration(math.MaxInt64)
+	maxAge := time.Duration(math.MaxInt64)
 	if force {
 		maxAge = 0
 	}
@@ -121,7 +121,7 @@ func GetLatestEpisodes(force bool) []*Episode {
 		json.Unmarshal(data, &episodes)
 		return episodes
 	} else {
-		var days = 30
+		days := 30
 		if d, err := strconv.Atoi(os.Getenv("PODCAST_CACHE_DAYS")); err == nil {
 			days = d
 		}
@@ -259,7 +259,7 @@ func (p *Podcast) CacheArtwork() {
 }
 
 func (p *Podcast) GetEpisodes(force bool) error {
-	var maxAge = 12 * time.Hour
+	maxAge := 12 * time.Hour
 	if force {
 		maxAge = 0
 	} else if len(p.Episodes) > 0 {
@@ -300,7 +300,7 @@ func (p *Podcast) GetEpisodes(force bool) error {
 		for _, item := range rss.Channel.Items {
 			e := Episode{
 				Title:    strings.TrimSpace(strings.ReplaceAll(item.Title, "&amp;", "&")),
-				Html:     longestString(item.Desc, item.Content, item.Summary),
+				HTML:     longestString(item.Desc, item.Content, item.Summary),
 				Date:     parseDate(item.Date),
 				Podcast:  p.Name,
 				Duration: calculateDuration(item.Duration),
@@ -334,12 +334,12 @@ func (e *Episode) CacheShownote() string {
 	if _, err := os.Stat(path); err == nil {
 		return path
 	}
-	if e.Html == "" {
+	if e.HTML == "" {
 		return ""
 	}
 	re := regexp.MustCompile(`(<(p|span) [^>]*style="[^"]*)background-color:.+?; ?`)
 	var html string
-	html = re.ReplaceAllString(e.Html, "$1")
+	html = re.ReplaceAllString(e.HTML, "$1")
 	re = regexp.MustCompile(`(<(p|span) [^>]*style=("[^"]+[^-]|"))color:.+?; ?`)
 	html = re.ReplaceAllString(html, "$1")
 	re = regexp.MustCompile(`<audio[^>]*(>[\s\S]*?</audio|/)>`)

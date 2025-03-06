@@ -19,12 +19,12 @@ func UpdateFileAndCommit(content string) error {
 	httpClient := oauth2.NewClient(context.Background(), src)
 	client := githubv4.NewClient(httpClient)
 
-	opmlUrl := os.Getenv("FEEDS_URL")
-	parsedUrl, err := url.Parse(opmlUrl)
+	opmlURL := os.Getenv("FEEDS_URL")
+	parsedURL, err := url.Parse(opmlURL)
 	if err != nil {
 		return err
 	}
-	segments := strings.Split(parsedUrl.Path, "/")
+	segments := strings.Split(parsedURL.Path, "/")
 	username := segments[1]
 	repoName := segments[2]
 	branchName := segments[3]
@@ -41,7 +41,7 @@ func UpdateFileAndCommit(content string) error {
 			} `graphql:"ref(qualifiedName: $qualifiedName)"`
 		} `graphql:"repository(owner: $owner, name: $name)"`
 	}
-	variables := map[string]interface{}{
+	variables := map[string]any{
 		"owner":         githubv4.String(username),
 		"name":          githubv4.String(repoName),
 		"qualifiedName": githubv4.String(branchName),
@@ -53,9 +53,7 @@ func UpdateFileAndCommit(content string) error {
 	commitOid := query.Repository.Ref.Target.Commit.Oid
 
 	var mutation struct {
-		CreateCommitOnBranch struct {
-			ClientMutationId string
-		} `graphql:"createCommitOnBranch(input: $input)"`
+		CreateCommitOnBranch struct {} `graphql:"createCommitOnBranch(input: $input)"`
 	}
 	repo := githubv4.String(username + "/" + repoName)
 	branch := githubv4.String(branchName)

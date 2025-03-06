@@ -1,15 +1,17 @@
 package main
 
 import (
-	"log"
 	"fmt"
+	"log"
 	"os"
 )
 
-var cacheDir = os.Getenv("alfred_workflow_cache")
-var allPodcasts []*Podcast
-var podcast *Podcast
-var workflow = Workflow{}
+var (
+	cacheDir    = os.Getenv("alfred_workflow_cache")
+	allPodcasts []*Podcast
+	podcast     *Podcast
+	workflow    = Workflow{}
+)
 
 func main() {
 	if _, err := os.Stat(cacheDir + "/podcasts"); os.IsNotExist(err) {
@@ -74,11 +76,11 @@ func main() {
 			Notify(err.Error(), "Error")
 		}
 	case "subscribe":
-		podcast, err := SubscribeNewFeed(&Podcast{URL: os.Args[1]})
+		p, err := SubscribeNewFeed(&Podcast{URL: os.Args[1]})
 		if err != nil {
 			Notify(err.Error(), "Error")
 		} else {
-			Notify("Subscribed to " + podcast.Name)
+			Notify("Subscribed to " + p.Name)
 		}
 	case "unsubscribe":
 		podcast, err := UnsubscribeFeed(&Podcast{URL: os.Args[1]})

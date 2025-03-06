@@ -14,7 +14,7 @@ import (
 )
 
 func matchString(text ...string) string {
-	var py = text
+	py := text
 	for _, t := range text {
 		for _, v := range pinyin.Convert(t, nil) {
 			py = append(py, strings.Join(v, ""))

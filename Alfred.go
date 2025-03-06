@@ -12,16 +12,16 @@ type Icon struct {
 }
 
 type Mod struct {
-	Valid     bool                   `json:"valid,omitempty"`
-	Subtitle  string                 `json:"subtitle,omitempty"`
-	Arg       string                 `json:"arg,omitempty"`
-	Icon      *Icon                  `json:"icon,omitempty"`
-	Variables map[string]interface{} `json:"variables,omitempty"`
+	Valid     bool           `json:"valid,omitempty"`
+	Subtitle  string         `json:"subtitle,omitempty"`
+	Arg       string         `json:"arg,omitempty"`
+	Icon      *Icon          `json:"icon,omitempty"`
+	Variables map[string]any `json:"variables,omitempty"`
 }
 
-func (m *Mod) SetVar(name string, value interface{}) {
+func (m *Mod) SetVar(name string, value any) {
 	if m.Variables == nil {
-		m.Variables = make(map[string]interface{})
+		m.Variables = make(map[string]any)
 	}
 	m.Variables[name] = value
 }
@@ -38,9 +38,9 @@ type Item struct {
 		Copy      string `json:"copy,omitempty"`
 		LargeType string `json:"largetype,omitempty"`
 	} `json:"text"`
-	QuickLookURL string                 `json:"quicklookurl,omitempty"`
-	Icon         *Icon                  `json:"icon,omitempty"`
-	Variables    map[string]interface{} `json:"variables,omitempty"`
+	QuickLookURL string         `json:"quicklookurl,omitempty"`
+	Icon         *Icon          `json:"icon,omitempty"`
+	Variables    map[string]any `json:"variables,omitempty"`
 	Mods         struct {
 		Cmd      *Mod `json:"cmd,omitempty"`
 		Alt      *Mod `json:"alt,omitempty"`
@@ -50,9 +50,9 @@ type Item struct {
 	} `json:"mods"`
 }
 
-func (i *Item) SetVar(name string, value interface{}) {
+func (i *Item) SetVar(name string, value any) {
 	if i.Variables == nil {
-		i.Variables = make(map[string]interface{})
+		i.Variables = make(map[string]any)
 	}
 	i.Variables[name] = value
 }
@@ -71,11 +71,11 @@ func (w *Workflow) UnshiftItem(item *Item) {
 }
 
 func (w *Workflow) WarnEmpty(s ...string) {
-	var title = "No Result Found"
+	title := "No Result Found"
 	if len(s) > 0 && s[0] != "" {
 		title = s[0]
 	}
-	var icon = os.Getenv("alfred_preferences") + "/resources/AlertCautionIcon.icns"
+	icon := os.Getenv("alfred_preferences") + "/resources/AlertCautionIcon.icns"
 	if len(s) > 1 && s[1] != "" {
 		icon = s[1]
 	}
