@@ -1,8 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -48,7 +51,7 @@ func ListEpisodes() {
 	name := os.Getenv("podcast")
 	if podcast == nil {
 		podcast = &Podcast{Name: name}
-    podcast.GetEpisodes(false)
+		podcast.GetEpisodes(false)
 		workflow.SetVar("podcast", name)
 	}
 	if podcast == nil {
@@ -87,31 +90,35 @@ func ListEpisodes() {
 	workflow.AddItem(&item)
 }
 
-func ListQueue() {
+func showSavedPlaylist() error {
+	fileInfo, err := os.Stat(fmt.Sprintf("%s/playlist.m3u", cacheDir))
+	if err != nil {
+		return errors.New("no saved playlist found")
+	}
+	days := int(time.Since(fileInfo.ModTime()).Hours() / 24)
+	since := fmt.Sprintf("%d days ago", days)
+	switch days {
+	case 0:
+		since = "today"
+	case 1:
+		since = "yesterday"
+	}
+	item := &Item{
+		Title:    "No Episodes Found",
+		Subtitle: fmt.Sprintf("Load saved playlist (%s)", since),
+		Arg:      fmt.Sprintf("%s/playlist.m3u", cacheDir),
+		Type:     "file",
+		Icon:     &Icon{Path: "icons/save.png"},
+	}
+	item.SetVar("action", "loadList")
+	workflow.AddItem(item)
+	return nil
+}
+
+func ListQueue() error {
 	playlist, err := GetPlaylist()
 	if err != nil || len(playlist) == 0 {
-		if fileInfo, err := os.Stat(fmt.Sprintf("%s/playlist.m3u", cacheDir)); err == nil {
-			days := int(time.Since(fileInfo.ModTime()).Hours() / 24)
-			since := fmt.Sprintf("%d days ago", days)
-			switch days {
-			case 0:
-				since = "today"
-			case 1:
-				since = "yesterday"
-			}
-			item := &Item{
-				Title:    "No Episodes Found",
-				Subtitle: fmt.Sprintf("Load saved playlist (%s)", since),
-				Arg:      fmt.Sprintf("%s/playlist.m3u", cacheDir),
-				Type:     "file",
-				Icon:     &Icon{Path: "icons/save.png"},
-			}
-			item.SetVar("action", "loadList")
-			workflow.AddItem(item)
-		} else {
-			workflow.WarnEmpty("No Episodes Found")
-		}
-		return
+		return errors.New("no episodes found")
 	}
 	var episodes []*Episode
 	latestEpisodes := GetLatestEpisodes(false)
@@ -150,9 +157,34 @@ func ListQueue() {
 		}
 	}
 	if len(episodes) == 0 {
-		workflow.WarnEmpty("No Episodes Found")
+		return errors.New("no episodes found")
 	} else {
 		workflow.UnshiftItem(PlayerControl(episodes))
+		return nil
+	}
+}
+
+func GetPlaying() {
+	var title string
+	var author string
+	title = os.Getenv("title")
+	author = os.Getenv("artist")
+	if title == "" {
+		cmd := exec.Command("nowplaying-cli", "get", "title", "artist")
+		if out, err := cmd.Output(); err == nil {
+			output := strings.Split(string(out), "\n")
+			title = output[0]
+			author = output[1]
+		}
+	}
+	if e := FindEpisode(map[string]string{"title": title, "author": author}); e != nil {
+		item := e.Format()
+		valid := false
+		item.Valid = &valid
+		item.Mods.Cmd = nil
+		workflow.AddItem(item)
+	} else if err := showSavedPlaylist(); err != nil {
+		workflow.WarnEmpty("No Episode Playing")
 	}
 }
 

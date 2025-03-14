@@ -15,13 +15,19 @@ var (
 
 func main() {
 	if _, err := os.Stat(cacheDir + "/podcasts"); os.IsNotExist(err) {
-		os.MkdirAll(cacheDir+"/podcasts", 0755)
+		if err = os.MkdirAll(cacheDir+"/podcasts", 0755); err != nil {
+			log.Fatal(err)
+		}
 	}
 	if _, err := os.Stat(cacheDir + "/artworks"); os.IsNotExist(err) {
-		os.MkdirAll(cacheDir+"/artworks", 0755)
+		if err = os.MkdirAll(cacheDir+"/artworks", 0755); err != nil {
+			log.Fatal(err)
+		}
 	}
 	if _, err := os.Stat(cacheDir + "/shownotes"); os.IsNotExist(err) {
-		os.MkdirAll(cacheDir+"/shownotes", 0755)
+		if err = os.MkdirAll(cacheDir+"/shownotes", 0755); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	trigger := os.Getenv("trigger")
@@ -83,12 +89,12 @@ func main() {
 			Notify("Subscribed to " + p.Name)
 		}
 	case "unsubscribe":
-		podcast, err := UnsubscribeFeed(&Podcast{URL: os.Args[1]})
+		p, err := UnsubscribeFeed(&Podcast{URL: os.Args[1]})
 		if err != nil {
 			Notify(err.Error(), "Error")
 		} else {
-			Notify("Unsubscribed from " + podcast.Name)
-			podcast.ClearCache()
+			Notify("Unsubscribed from " + p.Name)
+			p.ClearCache()
 		}
 	default:
 		// do nothing
@@ -109,17 +115,11 @@ func main() {
 	case "episodes":
 		ListEpisodes()
 	case "queue":
-		ListQueue()
-	case "playing":
-		if e := FindEpisode(map[string]string{"title": os.Getenv("title"), "author": os.Getenv("artist")}); e != nil {
-			item := e.Format()
-			valid := false
-			item.Valid = &valid
-			item.Mods.Cmd = nil
-			workflow.AddItem(item)
-		} else {
-			workflow.WarnEmpty("No Episode Found")
+		if err := ListQueue(); err != nil {
+			GetPlaying()
 		}
+	case "playing":
+		GetPlaying()
 	case "test":
 		log.Println("test")
 	default:
