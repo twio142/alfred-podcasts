@@ -170,7 +170,7 @@ func GetPlaying() {
 	title = os.Getenv("title")
 	author = os.Getenv("artist")
 	if title == "" {
-		cmd := exec.Command("nowplaying-cli", "get", "title", "artist")
+		cmd := exec.Command("nowplaying-cli", "get", "title", "album")
 		if out, err := cmd.Output(); err == nil {
 			output := strings.Split(string(out), "\n")
 			title = output[0]
