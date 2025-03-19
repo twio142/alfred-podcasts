@@ -18,24 +18,29 @@ import (
 )
 
 type Podcast struct {
-	Name        string    `json:"name"`
-	Author      string    `json:"author"`
-	URL         string    `json:"url"`
-	Desc        string    `json:"desc"`
-	Image       string    `json:"image"`
-	Link        string    `json:"link"`
-	Episodes    []Episode `json:"episodes"`
-	LastUpdated time.Time `json:"lastUpdated"`
+	Name        string              `json:"name"`
+	Author      string              `json:"author"`
+	URL         string              `json:"url"`
+	Desc        string              `json:"desc"`
+	Image       string              `json:"image"`
+	Link        string              `json:"link"`
+	Episodes    []Episode           `json:"-"`
+	EpisodeMap  map[string]*Episode `json:"episodes"`
+	LastUpdated time.Time           `json:"lastUpdated"`
+	UUID        string              `json:"uuid"`
 }
 
 type Episode struct {
-	Title    string    `json:"title"`
-	URL      string    `json:"url"`
-	HTML     string    `json:"html"`
-	Podcast  string    `json:"podcast"`
-	Date     time.Time `json:"date"`
-	Duration int       `json:"duration"`
-	Image    string    `json:"image"`
+	Title       string    `json:"title"`
+	URL         string    `json:"url"`
+	ShowNotes   string    `json:"show_notes"`
+	Podcast     string    `json:"podcast"`
+	PodcastUUID string    `json:"podcast_uuid"`
+	Date        time.Time `json:"date"`
+	Duration    int       `json:"duration"`
+	PlayedUpTo  int       `json:"playedUpTo"`
+	Image       string    `json:"image"`
+	UUID        string    `json:"uuid"`
 }
 
 func GetAllPodcasts(force bool) error {
@@ -115,52 +120,52 @@ func GetLatestEpisodes(force bool) []*Episode {
 	if force {
 		maxAge = 0
 	}
-	path := getCachePath("latest")
+	file := getCachePath("latest")
 
-	if data, err := readCache(path, maxAge); err == nil {
-		json.Unmarshal(data, &episodes)
-		return episodes
-	} else {
-		days := 30
-		if d, err := strconv.Atoi(os.Getenv("PODCAST_CACHE_DAYS")); err == nil {
-			days = d
+	if data, err := readCache(file, maxAge); err == nil {
+		if err := json.Unmarshal(data, &episodes); err == nil {
+			return episodes
 		}
-		GetAllPodcasts(force)
-		for _, p := range allPodcasts {
-			for _, e := range p.Episodes {
-				if e.Date.After(time.Now().AddDate(0, 0, -days)) {
-					episodes = append(episodes, &e)
-				}
+	}
+	days := 30
+	if d, err := strconv.Atoi(os.Getenv("PODCAST_CACHE_DAYS")); err == nil {
+		days = d
+	}
+	GetAllPodcasts(force)
+	for _, p := range allPodcasts {
+		for _, e := range p.Episodes {
+			if e.Date.After(time.Now().AddDate(0, 0, -days)) {
+				episodes = append(episodes, &e)
 			}
 		}
-
-		if len(episodes) == 0 {
-			return nil
-		}
-		sort.Slice(episodes, func(i, j int) bool {
-			return episodes[i].Date.After(episodes[j].Date)
-		})
-		data, _ = json.Marshal(episodes)
-		writeCache(path, data)
-		return episodes
 	}
+
+	if len(episodes) == 0 {
+		return nil
+	}
+	sort.Slice(episodes, func(i, j int) bool {
+		return episodes[i].Date.After(episodes[j].Date)
+	})
+	data, _ := json.Marshal(episodes)
+	writeCache(file, data)
+	return episodes
 }
 
 func refreshLatest() {
 	var latestEpisodes []*Episode
 	var episodesToKeep []*Episode
-	path := getCachePath("latest")
+	file := getCachePath("latest")
 
-	if data, err := readCache(path, time.Duration(math.MaxInt64)); err == nil {
-		json.Unmarshal(data, &latestEpisodes)
-	} else {
-		os.Remove(getCachePath("latest"))
+	if data, err := readCache(file, time.Duration(math.MaxInt64)); err != nil {
+		os.Remove(file)
 		return
+	} else {
+		json.Unmarshal(data, &latestEpisodes)
 	}
 
 	items, err := GetPlaylist()
 	if err != nil || len(items) == 0 {
-		os.Remove(getCachePath("latest"))
+		os.Remove(file)
 		return
 	}
 	for i, item := range items {
@@ -177,7 +182,7 @@ func refreshLatest() {
 			}
 		}
 	}
-	os.Remove(getCachePath("latest"))
+	os.Remove(file)
 	if len(episodesToKeep) == 0 {
 		return
 	}
@@ -192,7 +197,7 @@ func refreshLatest() {
 	}
 	if len(latestEpisodes) > count {
 		data, _ := json.Marshal(latestEpisodes)
-		writeCache(path, data)
+		writeCache(file, data)
 	}
 }
 
@@ -252,9 +257,9 @@ func FindEpisode(args map[string]string) *Episode {
 }
 
 func (p *Podcast) CacheArtwork() {
-	path := getCachePath("artworks", p.Name)
-	if _, err := os.Stat(path); os.IsNotExist(err) && p.Image != "" {
-		downloadImage(p.Image, path)
+	file := getCachePath("artworks", p.Name)
+	if _, err := os.Stat(file); os.IsNotExist(err) && p.Image != "" {
+		downloadImage(p.Image, file)
 	}
 }
 
@@ -265,62 +270,62 @@ func (p *Podcast) GetEpisodes(force bool) error {
 	} else if len(p.Episodes) > 0 {
 		return nil
 	}
-	path := getCachePath("podcasts", p.Name)
-
-	if data, err := readCache(path, maxAge); err == nil {
-		json.Unmarshal(data, &p)
-	} else {
-		if p.URL == "" {
-			feeds, err := RequestFeeds()
-			if err != nil {
-				return err
-			}
-			for _, feed := range feeds {
-				if feed.Name == p.Name {
-					p.URL = feed.URL
-					break
-				}
-			}
-			if p.URL == "" {
-				return fmt.Errorf("podcast not found")
-			}
+	file := getCachePath("podcasts", p.Name)
+	if data, err := readCache(file, maxAge); err == nil {
+		if err := json.Unmarshal(data, &p); err == nil {
+			return nil
 		}
-		rss, err := RequestRss(p.URL)
+	}
+	if p.URL == "" {
+		feeds, err := RequestFeeds()
 		if err != nil {
 			return err
 		}
-		if p.Name == "" {
-			p.Name = strings.TrimSpace(rss.Channel.Title)
-			path = getCachePath("podcasts", p.Name)
-		}
-		p.Desc = rss.desc()
-		p.Image = longestString(rss.Channel.Image.Href, rss.Channel.Image.URL)
-		p.Link = rss.Channel.Link
-		p.Author = rss.Channel.Author
-		for _, item := range rss.Channel.Items {
-			e := Episode{
-				Title:    strings.TrimSpace(strings.ReplaceAll(item.Title, "&amp;", "&")),
-				HTML:     longestString(item.Desc, item.Content, item.Summary),
-				Date:     parseDate(item.Date),
-				Podcast:  p.Name,
-				Duration: calculateDuration(item.Duration),
-				Image:    longestString(item.Image.Href, item.Image.URL, p.Image),
-			}
-			e.URL = item.Enclosure.URL
-			if e.URL == "" {
-				e.URL = item.Link
-			}
-			p.Episodes = append(p.Episodes, e)
-			if e.Date.After(p.LastUpdated) {
-				p.LastUpdated = e.Date
+		for _, feed := range feeds {
+			if feed.Name == p.Name {
+				p.URL = feed.URL
+				break
 			}
 		}
-		sort.Slice(p.Episodes, func(i, j int) bool {
-			return p.Episodes[i].Date.After(p.Episodes[j].Date)
-		})
-		data, _ = json.Marshal(p)
-		writeCache(path, data)
+		if p.URL == "" {
+			return fmt.Errorf("podcast not found")
+		}
 	}
+	rss, err := RequestRss(p.URL)
+	if err != nil {
+		return err
+	}
+	if p.Name == "" {
+		p.Name = strings.TrimSpace(rss.Channel.Title)
+		file = getCachePath("podcasts", p.Name)
+	}
+	p.Desc = rss.desc()
+	p.Image = longestString(rss.Channel.Image.Href, rss.Channel.Image.URL)
+	p.Link = rss.Channel.Link
+	p.Author = rss.Channel.Author
+	for _, item := range rss.Channel.Items {
+		e := Episode{
+			Title:     strings.TrimSpace(strings.ReplaceAll(item.Title, "&amp;", "&")),
+			ShowNotes: longestString(item.Desc, item.Content, item.Summary),
+			Date:      parseDate(item.Date),
+			Podcast:   p.Name,
+			Duration:  calculateDuration(item.Duration),
+			Image:     longestString(item.Image.Href, item.Image.URL, p.Image),
+		}
+		e.URL = item.Enclosure.URL
+		if e.URL == "" {
+			e.URL = item.Link
+		}
+		p.Episodes = append(p.Episodes, e)
+		if e.Date.After(p.LastUpdated) {
+			p.LastUpdated = e.Date
+		}
+	}
+	sort.Slice(p.Episodes, func(i, j int) bool {
+		return p.Episodes[i].Date.After(p.Episodes[j].Date)
+	})
+	data, _ := json.Marshal(p)
+	writeCache(file, data)
 	return nil
 }
 
@@ -330,24 +335,24 @@ func (p *Podcast) ClearCache() {
 }
 
 func (e *Episode) CacheShownote() string {
-	path := getCachePath("shownotes", fmt.Sprintf("%s_%s.md", e.Podcast, e.Title))
-	if _, err := os.Stat(path); err == nil {
-		return path
+	file := getCachePath("shownotes", fmt.Sprintf("%s_%s.md", e.Podcast, e.Title))
+	if _, err := os.Stat(file); err == nil {
+		return file
 	}
-	if e.HTML == "" {
+	if e.ShowNotes == "" {
 		return ""
 	}
 	re := regexp.MustCompile(`(<(p|span) [^>]*style="[^"]*)background-color:.+?; ?`)
-	var html string
-	html = re.ReplaceAllString(e.HTML, "$1")
+	var showNotes string
+	showNotes = re.ReplaceAllString(e.ShowNotes, "$1")
 	re = regexp.MustCompile(`(<(p|span) [^>]*style=("[^"]+[^-]|"))color:.+?; ?`)
-	html = re.ReplaceAllString(html, "$1")
+	showNotes = re.ReplaceAllString(showNotes, "$1")
 	re = regexp.MustCompile(`<audio[^>]*(>[\s\S]*?</audio|/)>`)
-	html = re.ReplaceAllString(html, "")
-	html = strings.ReplaceAll(html, "\n", "<br/>")
+	showNotes = re.ReplaceAllString(showNotes, "")
+	showNotes = strings.ReplaceAll(showNotes, "\n", "<br/>")
 	if e.Image != "" {
-		html += "\n\n<img width=\"20%\" src=\"" + e.Image + "\"/>"
+		showNotes += "\n\n<img width=\"20%\" src=\"" + e.Image + "\"/>"
 	}
-	os.WriteFile(path, []byte(html), 0644)
-	return path
+	os.WriteFile(file, []byte(showNotes), 0644)
+	return file
 }

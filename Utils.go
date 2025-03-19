@@ -110,12 +110,13 @@ func readCache(path string, maxAge time.Duration) ([]byte, error) {
 	if maxAge == 0 {
 		return nil, fmt.Errorf("force cache refresh")
 	}
-	if info, err := os.Stat(path); os.IsNotExist(err) || time.Since(info.ModTime()) > maxAge {
-		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("cache not found")
-		} else {
-			refreshInBackground()
-		}
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return nil, fmt.Errorf("cache not found")
+	} else if time.Since(info.ModTime()) > maxAge {
+		// TEST: temporarily disable cache refresh
+		return nil, fmt.Errorf("cache expired")
+		// refreshInBackground()
 	}
 	return os.ReadFile(path)
 }
