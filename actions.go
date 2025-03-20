@@ -20,7 +20,7 @@ func (e *Episode) AddToQueue(action string) ([]*Episode, error) {
 	}
 	if action == "play_last" {
 		// if the episode is already in the queue, do nothing
-		if upNext, err := PocketCastsGetUpNext(true); err == nil {
+		if upNext, err := GetUpNext(true); err == nil {
 			for _, episode := range upNext {
 				if episode.UUID == e.UUID {
 					return upNext, nil

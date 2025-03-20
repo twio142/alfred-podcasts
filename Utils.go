@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -37,27 +36,6 @@ func formatDuration(duration int) string {
 	}
 }
 
-func calculateDuration(durationStr string) int {
-	num, err := strconv.Atoi(durationStr)
-	if err == nil {
-		return num
-	}
-	parts := strings.Split(durationStr, ":")
-	if len(parts) == 3 {
-		hours, _ := strconv.Atoi(parts[0])
-		minutes, _ := strconv.Atoi(parts[1])
-		seconds, _ := strconv.Atoi(parts[2])
-		return (hours * 3600) + (minutes * 60) + seconds
-	} else if len(parts) == 2 {
-		minutes, _ := strconv.Atoi(parts[0])
-		seconds, _ := strconv.Atoi(parts[1])
-		return (minutes * 60) + seconds
-	} else {
-		seconds, _ := strconv.Atoi(parts[0])
-		return seconds
-	}
-}
-
 func downloadImage(url string, path string) {
 	scpt := fmt.Sprintf("curl -m 10 -o '%s' '%s' && file --mime-type -b '%s' | grep -q '^image/' && sips -Z 256 '%s' || rm -f '%s'", path, url, path, path, path)
 	cmd := exec.Command("/bin/sh", "-c", scpt)
@@ -67,37 +45,6 @@ func downloadImage(url string, path string) {
 	cmd.Start()
 }
 
-func longestString(str ...string) string {
-	var longest string
-	for _, s := range str {
-		s = strings.TrimSpace(s)
-		if len(s) > len(longest) {
-			longest = s
-		}
-	}
-	return longest
-}
-
-func parseDate(dateStr string) time.Time {
-	formats := []string{
-		"Mon, 2 Jan 2006 15:04:05 MST",
-		"Mon, 02 Jan 2006 15:04:05 MST",
-		"Mon, 2 Jan 2006 15:04:05 -0700",
-		"Mon, 02 Jan 2006 15:04:05 -0700",
-	}
-
-	var t time.Time
-	var err error
-	for _, format := range formats {
-		t, err = time.Parse(format, dateStr)
-		if err == nil {
-			return t
-		}
-	}
-
-	return t.In(time.Local)
-}
-
 func getCachePath(parts ...string) string {
 	for i, part := range parts {
 		parts[i] = strings.ReplaceAll(strings.ReplaceAll(part, "/", "%2F"), ":", "%3A")
@@ -105,7 +52,7 @@ func getCachePath(parts ...string) string {
 	return fmt.Sprintf("%s/%s", cacheDir, strings.Join(parts, "/"))
 }
 
-func readCache(path string, maxAge time.Duration) ([]byte, error) {
+func readCache(path string, maxAge time.Duration, refreshTarget ...string) ([]byte, error) {
 	// to read cache despite the maxAge, set maxAge to `time.Duration(math.MaxInt64)`
 	if maxAge == 0 {
 		return nil, fmt.Errorf("force cache refresh")
@@ -114,9 +61,7 @@ func readCache(path string, maxAge time.Duration) ([]byte, error) {
 	if os.IsNotExist(err) {
 		return nil, fmt.Errorf("cache not found")
 	} else if time.Since(info.ModTime()) > maxAge {
-		// TEST: temporarily disable cache refresh
-		return nil, fmt.Errorf("cache expired")
-		// refreshInBackground()
+		refreshInBackground(refreshTarget)
 	}
 	return os.ReadFile(path)
 }
@@ -130,8 +75,19 @@ func clearOldCache() {
 	cmd.Run()
 }
 
-func refreshInBackground() {
-	_, err := os.OpenFile(getCachePath("podcasts.lock"), os.O_CREATE|os.O_EXCL, 0666)
+func getLockFile(refreshTarget []string) string {
+	if refreshTarget[0] == "podcast" && len(refreshTarget) > 1 {
+		lockfile := fmt.Sprintf("%s.lock", refreshTarget[1])
+		return getCachePath("podcasts", lockfile)
+	} else {
+		lockfile := refreshTarget[0] + ".lock"
+		return getCachePath(lockfile)
+	}
+}
+
+func refreshInBackground(refreshTarget []string) {
+	lockfile := getLockFile(refreshTarget)
+	_, err := os.OpenFile(lockfile, os.O_CREATE|os.O_EXCL, 0666)
 	if err != nil {
 		if os.IsExist(err) {
 			return
@@ -139,11 +95,36 @@ func refreshInBackground() {
 		log.Fatalf("Failed to create lock file: %v", err)
 	}
 	cmd := exec.Command(os.Args[0])
-	cmd.Env = append(os.Environ(), "action=refreshInBackground")
+	cmd.Env = append(os.Environ(), "refresh="+refreshTarget[0])
+	if refreshTarget[0] == "podcast" && len(refreshTarget) > 1 {
+		cmd.Env = append(cmd.Env, "podcast="+refreshTarget[1])
+	}
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setsid: true,
 	}
 	cmd.Start()
+}
+
+func refreshCache(refreshTarget []string) error {
+	defer os.Remove(getLockFile(refreshTarget))
+	target := refreshTarget[0]
+	switch target {
+	case "podcast":
+		if len(refreshTarget) < 2 {
+			return fmt.Errorf("no podcast name provided")
+		}
+		p := &Podcast{Name: refreshTarget[1]}
+		return p.GetEpisodes(true)
+	case "allPodcasts":
+		GetAllPodcasts(true)
+	case "up_next":
+		_, err := GetUpNext(true)
+		return err
+	default:
+		_, err := GetList(target, true)
+		return err
+	}
+	return nil
 }
 
 func Notify(message string, t ...string) {

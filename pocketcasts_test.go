@@ -72,7 +72,7 @@ func TestPocketCastsGetPodcasts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotErr := main.PocketCastsGetPodcasts(tt.force)
+			gotErr := main.GetPodcasts(tt.force)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("PocketCastsGetPodcasts() failed: %v", gotErr)
@@ -106,7 +106,7 @@ func TestPocketCastsGetUpNext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, gotErr := main.PocketCastsGetUpNext(tt.force)
+			got, gotErr := main.GetUpNext(tt.force)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("PocketCastsGetUpNext() failed: %v", gotErr)
@@ -157,7 +157,7 @@ func TestPocketCastsGetList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, gotErr := main.PocketCastsGetList(tt.list, tt.force)
+			got, gotErr := main.GetList(tt.list, tt.force)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("PocketCastsGetNewReleases() failed: %v", gotErr)
@@ -208,7 +208,7 @@ func TestPodcast_PocketCastsGetEpisodes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotErr := tt.podcast.PocketCastsGetEpisodes(tt.force)
+			gotErr := tt.podcast.GetEpisodes(tt.force)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("PocketCastsGetPodcastEpisodes() failed: %v", gotErr)

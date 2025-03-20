@@ -7,13 +7,12 @@ import (
 )
 
 var (
-	cacheDir    = os.Getenv("alfred_workflow_cache")
-	allPodcasts []*Podcast
-	podcast     *Podcast
-	workflow    = Workflow{}
+	cacheDir   = os.Getenv("alfred_workflow_cache")
+	podcastMap map[string]*Podcast
+	workflow   = Workflow{}
 )
 
-func main() {
+func setup() {
 	if _, err := os.Stat(cacheDir + "/podcasts"); os.IsNotExist(err) {
 		if err = os.MkdirAll(cacheDir+"/podcasts", 0755); err != nil {
 			log.Fatal(err)
@@ -29,68 +28,52 @@ func main() {
 			log.Fatal(err)
 		}
 	}
+}
 
-	trigger := os.Getenv("trigger")
-	url := os.Getenv("url")
-	action := os.Getenv("action")
-	if action == "" {
-		action = os.Getenv("actionKeep")
-	}
-
+func performAction(action string) {
 	switch action {
-	case "refresh":
-		podcast = &Podcast{Name: os.Getenv("podcast")}
-		podcast.GetEpisodes(true)
-	case "refreshAll":
-		GetAllPodcasts(true)
-		refreshLatest()
-	case "refreshLatest":
-		refreshLatest()
-	case "refreshInBackground":
-		GetAllPodcasts(true)
-		clearOldCache()
-		defer os.Remove(getCachePath("podcasts.lock"))
-	case "addToQueue":
-		if err := AddToPlaylist(url); err != nil {
-			Notify(err.Error(), "Error")
-		} else if trigger != "queue" {
-			AddToLatest(url, os.Getenv("podcast"))
-		}
-	case "play":
-		if err := PlayEpisode(url); err != nil {
+	case "play_now":
+		if err := PlayEpisode(os.Getenv("url"), ""); err != nil {
 			Notify(err.Error(), "Error")
 		}
-	case "playNext":
-		if err := PlayEpisode(url, true); err != nil {
-			Notify(err.Error(), "Error")
+	case "syncPlaylist":
+		if playlist, err := generatePlaylist(); err == nil {
+			loadPlaylist(playlist, "insert-next-play")
 		}
-	case "remove":
-		if err := RemoveFromPlaylist(os.Getenv("id")); err != nil {
+	case "play_next", "play_last":
+    p := &Podcast {
+      UUID: os.Getenv("podcastUuid"),
+    }
+    p.GetEpisodes(false)
+    if e, ok := p.EpisodeMap[os.Getenv("uuid")]; ok {
+      if _, err := e.AddToQueue(action); err != nil {
+        Notify(err.Error(), "Error")
+      } else {
+        Notify("Added to queue: " + e.Title)
+      }
+    } else {
+      Notify("Episode not found", "Error")
+    }
+	case "markAsPlayed", "archive":
+		e := &Episode{UUID: os.Getenv("uuid"), PodcastUUID: os.Getenv("podcastUuid")}
+		if err := e.Archive(action == "markAsPlayed"); err != nil {
 			Notify(err.Error(), "Error")
-		}
-	case "playPause":
-		PlayPause()
-	case "30Back":
-		runCommand("seek", "-30")
-	case "next":
-		runCommand("playlist-next")
-	case "save":
-		SavePlaylist()
-		Notify("Playlist saved")
-	case "loadList":
-		if err := LoadPlaylist(); err != nil {
-			Notify(err.Error(), "Error")
+		} else if action == "markAsPlayed" {
+			Notify("Marked as played: " + e.Title)
+		} else {
+			Notify("Archived: " + e.Title)
 		}
 	case "subscribe":
-		p, err := SubscribeNewFeed(&Podcast{URL: os.Args[1]})
-		if err != nil {
+		p := &Podcast{URL: os.Args[1]}
+		if err := p.Subscribe(); err != nil {
 			Notify(err.Error(), "Error")
 		} else {
 			Notify("Subscribed to " + p.Name)
 		}
 	case "unsubscribe":
-		p, err := UnsubscribeFeed(&Podcast{URL: os.Args[1]})
-		if err != nil {
+		p := &Podcast{UUID: os.Getenv("podcastUuid")}
+		p.GetEpisodes(false)
+		if err := p.Unsubscribe(); err != nil {
 			Notify(err.Error(), "Error")
 		} else {
 			Notify("Unsubscribed from " + p.Name)
@@ -99,31 +82,49 @@ func main() {
 	default:
 		// do nothing
 	}
+}
 
-	if action != "" {
-		fmt.Println("{\"alfredworkflow\":{\"variables\":{\"action\":\"\"}}}")
-		return
-	}
-
-	workflow.SetVar("trigger", trigger)
-
+func runTrigger(trigger string) {
 	switch trigger {
 	case "podcasts":
 		ListPodcasts()
 	case "latest":
-		ListLatest()
+		ListNewReleases()
 	case "episodes":
-		ListEpisodes()
+		p := &Podcast{Name: os.Getenv("podcast"), UUID: os.Getenv("podcastUuid")}
+		p.GetEpisodes(false)
+		p.ListEpisodes()
 	case "queue":
-		if err := ListQueue(); err != nil {
-			GetPlaying()
-		}
+		ListUpNext()
 	case "playing":
 		GetPlaying()
 	case "test":
 		log.Println("test")
 	default:
 	}
+}
+
+func main() {
+	setup()
+
+	trigger := os.Getenv("trigger")
+	action := os.Getenv("action")
+	if action == "" {
+		action = os.Getenv("actionKeep")
+	}
+
+	if os.Getenv("refresh") != "" {
+		refreshCache([]string{os.Getenv("refresh"), os.Getenv("podcast")})
+		workflow.SetVar("refresh", "")
+	} else if action != "" {
+		performAction(action)
+		fmt.Println(`{"alfredworkflow":{"variables":{"action":""}}}`)
+		return
+	}
+
+	workflow.SetVar("trigger", trigger)
+
+	runTrigger(trigger)
 
 	workflow.Output()
 }

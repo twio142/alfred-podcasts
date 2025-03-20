@@ -32,6 +32,7 @@ type Item struct {
 	Arg          string `json:"arg,omitempty"`
 	Valid        *bool  `json:"valid,omitempty"`
 	AutoComplete string `json:"autocomplete,omitempty"`
+	UID          string `json:"uid,omitempty"`
 	Type         string `json:"type,omitempty"`
 	Match        string `json:"match,omitempty"`
 	Text         struct {

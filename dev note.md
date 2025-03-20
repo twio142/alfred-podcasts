@@ -2,7 +2,10 @@
 
 ## To-Do
 
-- Create functions to interact with Pocket Casts API
+- [ ] UI
+    - Embed actions
+- [x] Caching logic
+- [x] Create functions to interact with Pocket Casts API
     - Convert retrieved data into already defined data structure
         - Queue
         - Podcasts
@@ -13,7 +16,7 @@
         - Sync state with Pocket Casts
         - Add episode to queue / archive
         - Subscribe / unsubscribe
-- Adapt existing objects to the changes
+- [x] Adapt existing objects to the changes
     - Add `uuid` field to `Episode` and `Podcast` objects
 
 ## Pocket Casts API

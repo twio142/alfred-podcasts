@@ -14,7 +14,6 @@ import (
 var (
 	tokenMutex       sync.Mutex
 	pocketCastsToken string
-	podcastMap       map[string]*Podcast
 )
 
 func getToken() error {
@@ -114,7 +113,9 @@ func PocketCastsRequest(endpoint string, body *map[string]any, response any) err
 	fmt.Println("Method: ", method)
 	fmt.Println("Headers: ", headers)
 	fmt.Println("Body: ", body)
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 15 * time.Second,
+	}
 	var req *http.Request
 	var err error
 	if body == nil {
@@ -167,23 +168,19 @@ func PocketCastsLogin(email, password string) error {
 	return nil
 }
 
-func PocketCastsGetPodcasts(force bool) error {
+func GetPodcasts(force bool) error {
 	if !force && len(podcastMap) > 0 {
 		return nil
 	}
-	maxAge := 24 * time.Hour
+	maxAge := 7 * 24 * time.Hour
 	if force {
 		maxAge = 0
 	}
 	file := getCachePath("podcast_list")
 
 	podcastMap = make(map[string]*Podcast)
-	if data, err := readCache(file, maxAge); err == nil {
+	if data, err := readCache(file, maxAge, "allPodcasts"); err == nil {
 		if err := json.Unmarshal(data, &podcastMap); err == nil {
-			allPodcasts = make([]*Podcast, len(podcastMap))
-			for _, p := range podcastMap {
-				allPodcasts = append(allPodcasts, p)
-			}
 			return nil
 		}
 	}
@@ -195,8 +192,7 @@ func PocketCastsGetPodcasts(force bool) error {
 		return err
 	}
 	podcastMap = make(map[string]*Podcast)
-	allPodcasts = make([]*Podcast, len(response.Podcasts))
-	for i, p := range response.Podcasts {
+	for _, p := range response.Podcasts {
 		_p := &Podcast{
 			Name:        p.Name,
 			Link:        p.Link,
@@ -205,7 +201,6 @@ func PocketCastsGetPodcasts(force bool) error {
 			Desc:        p.Desc,
 			LastUpdated: p.LastUpdated,
 		}
-		allPodcasts[i] = _p
 		podcastMap[p.UUID] = _p
 	}
 	data, _ := json.Marshal(podcastMap)
@@ -213,20 +208,20 @@ func PocketCastsGetPodcasts(force bool) error {
 	return nil
 }
 
-func PocketCastsGetUpNext(force bool) ([]*Episode, error) {
+func GetUpNext(force bool) ([]*Episode, error) {
 	episodeMap := make([]*Episode, 0)
-	maxAge := 5 * time.Minute
+	maxAge := 30 * time.Minute
 	if force {
 		maxAge = 0
 	}
 	file := getCachePath("up_next")
 
-	if data, err := readCache(file, maxAge); err == nil {
+	if data, err := readCache(file, maxAge, "up_next"); err == nil {
 		if err := json.Unmarshal(data, &episodeMap); err == nil {
 			return episodeMap, nil
 		}
 	}
-	if err := PocketCastsGetPodcasts(force); err != nil {
+	if err := GetPodcasts(force); err != nil {
 		return nil, err
 	}
 	body := map[string]any{
@@ -245,7 +240,7 @@ func PocketCastsGetUpNext(force bool) ([]*Episode, error) {
 func processUpNextResponse(response *PocketCastsUpNextResponse) ([]*Episode, error) {
 	episodeMap := make(map[string]*Episode)
 	if len(podcastMap) == 0 {
-		PocketCastsGetPodcasts(false)
+		GetPodcasts(false)
 	}
 	episodes := make([]*Episode, len(response.Episodes))
 
@@ -291,7 +286,7 @@ func processUpNextResponse(response *PocketCastsUpNextResponse) ([]*Episode, err
 	return episodes, nil
 }
 
-func PocketCastsGetList(list string, force bool) ([]*Episode, error) {
+func GetList(list string, force bool) ([]*Episode, error) {
 	if list != "new_releases" && list != "history" {
 		return nil, fmt.Errorf("invalid list: %s", list)
 	}
@@ -302,12 +297,12 @@ func PocketCastsGetList(list string, force bool) ([]*Episode, error) {
 	}
 	file := getCachePath(list)
 
-	if data, err := readCache(file, maxAge); err == nil {
+	if data, err := readCache(file, maxAge, list); err == nil {
 		if err := json.Unmarshal(data, &episodes); err == nil {
 			return episodes, nil
 		}
 	}
-	if err := PocketCastsGetPodcasts(force); err != nil {
+	if err := GetPodcasts(force); err != nil {
 		return nil, err
 	}
 	body := map[string]any{}
@@ -350,7 +345,7 @@ func PocketCastsGetList(list string, force bool) ([]*Episode, error) {
 func (p *Podcast) GetInfo() error {
 	if p.Name != "" {
 		file := getCachePath("podcasts", p.Name)
-		if data, err := readCache(file, 0); err == nil {
+		if data, err := readCache(file, 0, "podcast", p.Name); err == nil {
 			if err := json.Unmarshal(data, &p); err == nil {
 				return nil
 			}
@@ -375,21 +370,35 @@ func (p *Podcast) GetInfo() error {
 	return nil
 }
 
-func (p *Podcast) PocketCastsGetEpisodes(force bool) error {
-	maxAge := 12 * time.Hour
-	if force {
-		maxAge = 0
+func (p *Podcast) GetEpisodes(force bool) error {
+	if err := p.resolveMetadata(force); err != nil {
+		return err
 	}
-	file := getCachePath("podcasts", p.Name)
+	return p.fetchAndUpdateEpisodes()
+}
 
-	if data, err := readCache(file, maxAge); err == nil {
-		if err := json.Unmarshal(data, &p); err == nil {
-			return nil
+func (p *Podcast) resolveMetadata(force bool) error {
+	if p.UUID != "" && p.Name == "" {
+		if err := GetPodcasts(false); err == nil {
+			if _p, ok := podcastMap[p.UUID]; ok {
+				p.Name = _p.Name
+			}
 		}
 	}
-
+	if p.Name != "" {
+		maxAge := 12 * time.Hour
+		if force {
+			maxAge = 0
+		}
+		file := getCachePath("podcasts", p.Name)
+		if data, err := readCache(file, maxAge, "podcast", p.Name); err == nil {
+			if err := json.Unmarshal(data, &p); err == nil {
+				return nil
+			}
+		}
+	}
 	if p.UUID == "" && p.Name != "" {
-		if err := PocketCastsGetPodcasts(false); err == nil {
+		if err := GetPodcasts(false); err == nil {
 			for _, _p := range podcastMap {
 				if _p.Name == p.Name {
 					p.UUID = _p.UUID
@@ -401,7 +410,10 @@ func (p *Podcast) PocketCastsGetEpisodes(force bool) error {
 	if p.UUID == "" {
 		return fmt.Errorf("podcast UUID not set")
 	}
+	return nil
+}
 
+func (p *Podcast) fetchAndUpdateEpisodes() error {
 	type requestResult struct {
 		response *PocketCastsEpisodesResponse
 		err      error
@@ -458,11 +470,13 @@ func (p *Podcast) PocketCastsGetEpisodes(force bool) error {
 	}
 
 	for _, e := range result2.response.Podcast.Episodes {
-		_e := p.EpisodeMap[e.UUID]
-		_e.ShowNotes = e.ShowNotes
+		if _e, ok := p.EpisodeMap[e.UUID]; ok {
+			_e.ShowNotes = e.ShowNotes
+		}
 	}
 
 	data, _ := json.Marshal(p)
+	file := getCachePath("podcasts", p.Name)
 	writeCache(file, data)
 	return nil
 }
