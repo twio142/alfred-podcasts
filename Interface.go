@@ -173,7 +173,7 @@ func GetPlaying() {
 }
 
 func (p *Podcast) Format() *Item {
-	icon := getCachePath("artworks", p.Name)
+	icon := getCachePath("artworks", p.UUID)
 	_, err := os.Stat(icon)
 	if err != nil {
 		icon = ""
@@ -216,7 +216,7 @@ func (p *Podcast) Format() *Item {
 }
 
 func (e *Episode) Format() *Item {
-	icon := getCachePath("artworks", e.Podcast)
+	icon := getCachePath("artworks", e.PodcastUUID)
 	if _, err := os.Stat(icon); err != nil {
 		icon = ""
 	}

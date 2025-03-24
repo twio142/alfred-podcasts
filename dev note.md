@@ -4,6 +4,7 @@
 
 - [ ] UI
     - Embed actions
+- [x] Change the cache file name to UUID
 - [x] Caching logic
 - [x] Create functions to interact with Pocket Casts API
     - Convert retrieved data into already defined data structure

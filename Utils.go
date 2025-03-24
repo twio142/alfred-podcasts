@@ -97,7 +97,7 @@ func refreshInBackground(refreshTarget []string) {
 	cmd := exec.Command(os.Args[0])
 	cmd.Env = append(os.Environ(), "refresh="+refreshTarget[0])
 	if refreshTarget[0] == "podcast" && len(refreshTarget) > 1 {
-		cmd.Env = append(cmd.Env, "podcast="+refreshTarget[1])
+		cmd.Env = append(cmd.Env, "podcastUuid="+refreshTarget[1])
 	}
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setsid: true,
@@ -113,7 +113,7 @@ func refreshCache(refreshTarget []string) error {
 		if len(refreshTarget) < 2 {
 			return fmt.Errorf("no podcast name provided")
 		}
-		p := &Podcast{Name: refreshTarget[1]}
+		p := &Podcast{UUID: refreshTarget[1]}
 		return p.GetEpisodes(true)
 	case "allPodcasts":
 		GetAllPodcasts(true)

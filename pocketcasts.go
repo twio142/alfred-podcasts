@@ -343,16 +343,14 @@ func GetList(list string, force bool) ([]*Episode, error) {
 }
 
 func (p *Podcast) GetInfo() error {
-	if p.Name != "" {
-		file := getCachePath("podcasts", p.Name)
-		if data, err := readCache(file, 0, "podcast", p.Name); err == nil {
-			if err := json.Unmarshal(data, &p); err == nil {
-				return nil
-			}
-		}
-	}
 	if p.UUID == "" {
 		return fmt.Errorf("podcast UUID not set")
+	}
+	file := getCachePath("podcasts", p.UUID)
+	if data, err := readCache(file, 0, "podcast", p.UUID); err == nil {
+		if err := json.Unmarshal(data, &p); err == nil {
+			return nil
+		}
 	}
 	var response PocketCastsEpisodesResponse
 	url := fmt.Sprintf("podcast-api.pocketcasts.com/podcast/full/%s", p.UUID)
@@ -364,50 +362,40 @@ func (p *Podcast) GetInfo() error {
 	p.Desc = response.Podcast.Desc
 	p.Link = response.Podcast.Link
 	p.Image = fmt.Sprintf("https://static.pocketcasts.com/discover/images/webp/200/%s.webp", p.UUID)
-	file := getCachePath("podcasts", p.Name)
 	data, _ := json.Marshal(p)
 	writeCache(file, data)
 	return nil
 }
 
 func (p *Podcast) GetEpisodes(force bool) error {
-	if err := p.resolveMetadata(force); err != nil {
+	if err := p.resolveMetadata(); err != nil {
 		return err
+	}
+	maxAge := 12 * time.Hour
+	if force {
+		maxAge = 0
+	}
+	file := getCachePath("podcasts", p.UUID)
+	if data, err := readCache(file, maxAge, "podcast", p.UUID); err == nil {
+		if err := json.Unmarshal(data, &p); err == nil {
+			return nil
+		}
 	}
 	return p.fetchAndUpdateEpisodes()
 }
 
-func (p *Podcast) resolveMetadata(force bool) error {
-	if p.UUID != "" && p.Name == "" {
-		if err := GetPodcasts(false); err == nil {
-			if _p, ok := podcastMap[p.UUID]; ok {
-				p.Name = _p.Name
-			}
-		}
-	}
-	if p.Name != "" {
-		maxAge := 12 * time.Hour
-		if force {
-			maxAge = 0
-		}
-		file := getCachePath("podcasts", p.Name)
-		if data, err := readCache(file, maxAge, "podcast", p.Name); err == nil {
-			if err := json.Unmarshal(data, &p); err == nil {
-				return nil
-			}
-		}
-	}
-	if p.UUID == "" && p.Name != "" {
-		if err := GetPodcasts(false); err == nil {
-			for _, _p := range podcastMap {
-				if _p.Name == p.Name {
-					p.UUID = _p.UUID
-					break
+func (p *Podcast) resolveMetadata() error {
+	if p.UUID == "" {
+		if p.Name != "" {
+			if err := GetPodcasts(false); err == nil {
+				for _, _p := range podcastMap {
+					if _p.Name == p.Name {
+						p.UUID = _p.UUID
+						return nil
+					}
 				}
 			}
 		}
-	}
-	if p.UUID == "" {
 		return fmt.Errorf("podcast UUID not set")
 	}
 	return nil
@@ -476,7 +464,7 @@ func (p *Podcast) fetchAndUpdateEpisodes() error {
 	}
 
 	data, _ := json.Marshal(p)
-	file := getCachePath("podcasts", p.Name)
+	file := getCachePath("podcasts", p.UUID)
 	writeCache(file, data)
 	return nil
 }

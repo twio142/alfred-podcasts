@@ -103,19 +103,19 @@ func FindEpisode(args map[string]string) *Episode {
 }
 
 func (p *Podcast) CacheArtwork() {
-	file := getCachePath("artworks", p.Name)
+	file := getCachePath("artworks", p.UUID)
 	if _, err := os.Stat(file); os.IsNotExist(err) && p.Image != "" {
 		downloadImage(p.Image, file)
 	}
 }
 
 func (p *Podcast) ClearCache() {
-	os.Remove(getCachePath("podcasts", p.Name))
-	os.Remove(getCachePath("artworks", p.Name))
+	os.Remove(getCachePath("podcasts", p.UUID))
+	os.Remove(getCachePath("artworks", p.UUID))
 }
 
 func (e *Episode) CacheShownote() string {
-	file := getCachePath("shownotes", fmt.Sprintf("%s_%s.md", e.Podcast, e.Title))
+	file := getCachePath("shownotes", fmt.Sprintf("%s.%s.md", e.PodcastUUID, e.UUID))
 	if _, err := os.Stat(file); err == nil {
 		return file
 	}

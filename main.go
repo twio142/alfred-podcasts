@@ -41,19 +41,19 @@ func performAction(action string) {
 			loadPlaylist(playlist, "insert-next-play")
 		}
 	case "play_next", "play_last":
-    p := &Podcast {
-      UUID: os.Getenv("podcastUuid"),
-    }
-    p.GetEpisodes(false)
-    if e, ok := p.EpisodeMap[os.Getenv("uuid")]; ok {
-      if _, err := e.AddToQueue(action); err != nil {
-        Notify(err.Error(), "Error")
-      } else {
-        Notify("Added to queue: " + e.Title)
-      }
-    } else {
-      Notify("Episode not found", "Error")
-    }
+		p := &Podcast{
+			UUID: os.Getenv("podcastUuid"),
+		}
+		p.GetEpisodes(false)
+		if e, ok := p.EpisodeMap[os.Getenv("uuid")]; ok {
+			if _, err := e.AddToQueue(action); err != nil {
+				Notify(err.Error(), "Error")
+			} else {
+				Notify("Added to queue: " + e.Title)
+			}
+		} else {
+			Notify("Episode not found", "Error")
+		}
 	case "markAsPlayed", "archive":
 		e := &Episode{UUID: os.Getenv("uuid"), PodcastUUID: os.Getenv("podcastUuid")}
 		if err := e.Archive(action == "markAsPlayed"); err != nil {
@@ -91,7 +91,7 @@ func runTrigger(trigger string) {
 	case "latest":
 		ListNewReleases()
 	case "episodes":
-		p := &Podcast{Name: os.Getenv("podcast"), UUID: os.Getenv("podcastUuid")}
+		p := &Podcast{UUID: os.Getenv("podcastUuid")}
 		p.GetEpisodes(false)
 		p.ListEpisodes()
 	case "queue":
@@ -114,7 +114,7 @@ func main() {
 	}
 
 	if os.Getenv("refresh") != "" {
-		refreshCache([]string{os.Getenv("refresh"), os.Getenv("podcast")})
+		refreshCache([]string{os.Getenv("refresh"), os.Getenv("podcastUuid")})
 		workflow.SetVar("refresh", "")
 	} else if action != "" {
 		performAction(action)
