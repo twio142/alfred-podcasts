@@ -3,10 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"sort"
-	"strings"
-	"time"
 )
 
 func ListPodcasts() {
@@ -43,30 +40,52 @@ func ListNewReleases() {
 	if len(episodes) == 0 {
 		item := Item{
 			Title:    "No Episodes Found",
-			Subtitle: "Refresh all podcasts",
+			Subtitle: "Refresh",
 			Icon:     &Icon{Path: "icons/refresh.png"},
 		}
-		item.SetVar("refresh", "allPodcasts")
+		item.SetVar("refresh", "new_releases")
+		workflow.AddItem(&item)
+		return
+	}
+	for i, e := range episodes {
+		item := e.Format()
+		if i == 1 {
+			item.Mods.Alt = nil
+		}
+		if i < 3 {
+			item.Mods.Cmd = nil
+		}
+		//  refresh new releases
+		fn := &Mod{Subtitle: "Refresh new releases", Icon: &Icon{Path: "icons/refresh.png"}}
+		fn.SetVar("refresh", "new_release")
+		item.Mods.Fn = fn
+		workflow.AddItem(item)
+	}
+}
+
+func ListUpNext() {
+	episodes, err := GetUpNext(false)
+	if err != nil {
+		workflow.WarnEmpty(err.Error())
+		return
+	}
+	if len(episodes) == 0 {
+		item := Item{
+			Title:    "No Episodes Found",
+			Subtitle: "Refresh",
+			Icon:     &Icon{Path: "icons/refresh.png"},
+		}
+		item.SetVar("refresh", "up_next")
 		workflow.AddItem(&item)
 		return
 	}
 	for _, e := range episodes {
-		if e.Duration == 0 {
-			p := &Podcast{Name: e.Podcast, UUID: e.PodcastUUID}
-			if err := p.GetEpisodes(false); err == nil {
-				if _e, ok := p.EpisodeMap[e.UUID]; ok {
-					e.Duration = _e.Duration
-					e.ShowNotes = _e.ShowNotes
-					e.Date = _e.Date
-				}
-			}
-		}
 		item := e.Format()
-		alt := &Mod{Subtitle: "Refresh latest episodes", Icon: &Icon{Path: "icons/refresh.png"}}
-		alt.SetVar("refresh", "new_release")
-		item.Mods.Alt = alt
+		// ↵ do nothing
+		item.SetVar("actionKeep", "noop")
 		workflow.AddItem(item)
 	}
+	upNextSummary(episodes)
 }
 
 func (p *Podcast) ListEpisodes() {
@@ -98,11 +117,14 @@ func (p *Podcast) ListEpisodes() {
 		item.Subtitle = fmt.Sprintf("􀪔 %s  ·  %s", e.Podcast, item.Subtitle)
 		item.Match = matchString(e.Title)
 		item.AutoComplete = ""
-		alt := &Mod{Subtitle: "Refresh podcast", Icon: &Icon{Path: "icons/refresh.png"}}
-		alt.SetVar("refresh", "podcast")
-		alt.SetVar("podcast", e.Podcast)
-		item.Mods.Alt = alt
+		//  refresh podcast
+		fn := &Mod{Subtitle: "Refresh podcast", Icon: &Icon{Path: "icons/refresh.png"}}
+		fn.SetVar("refresh", "podcast")
+		fn.SetVar("podcastUuid", e.PodcastUUID)
+		item.Mods.Fn = fn
 		item.Mods.Shift = nil
+		item.Mods.Ctrl = nil
+		item.Mods.CtrlShift = nil
 		workflow.AddItem(item)
 	}
 	item := Item{
@@ -111,65 +133,6 @@ func (p *Podcast) ListEpisodes() {
 	}
 	item.SetVar("trigger", "podcasts")
 	workflow.AddItem(&item)
-}
-
-func ListUpNext() {
-	episodes, err := GetUpNext(false)
-	if err != nil {
-		workflow.WarnEmpty(err.Error())
-		return
-	}
-	if len(episodes) == 0 {
-		item := Item{
-			Title:    "No Episodes Found",
-			Subtitle: "Refresh all podcasts",
-			Icon:     &Icon{Path: "icons/refresh.png"},
-		}
-		item.SetVar("refresh", "allPodcasts")
-		workflow.AddItem(&item)
-		return
-	}
-	for _, e := range episodes {
-		if e.Duration == 0 {
-			p := &Podcast{Name: e.Podcast, UUID: e.PodcastUUID}
-			if err := p.GetEpisodes(false); err == nil {
-				if _e, ok := p.EpisodeMap[e.UUID]; ok {
-					e.Duration = _e.Duration
-					e.ShowNotes = _e.ShowNotes
-					e.Date = _e.Date
-				}
-			}
-		}
-		item := e.Format()
-		alt := &Mod{Subtitle: "Refresh queue", Icon: &Icon{Path: "icons/refresh.png"}}
-		alt.SetVar("refresh", "up_next")
-		item.Mods.Alt = alt
-		workflow.AddItem(item)
-	}
-}
-
-func GetPlaying() {
-	title := os.Getenv("title")
-	author := os.Getenv("author")
-	podcast := os.Getenv("podcast")
-	if title == "" {
-		cmd := exec.Command("nowplaying-cli", "get", "title", "artist", "album")
-		if out, err := cmd.Output(); err == nil {
-			output := strings.Split(string(out), "\n")
-			title = output[0]
-			author = output[1]
-			podcast = output[1]
-		}
-	}
-	if e := FindEpisode(map[string]string{"title": title, "podcast": podcast, "author": author}); e != nil {
-		item := e.Format()
-		valid := false
-		item.Valid = &valid
-		item.Mods.Cmd = nil
-		workflow.AddItem(item)
-	} else {
-		workflow.WarnEmpty("No Episode Playing")
-	}
 }
 
 func (p *Podcast) Format() *Item {
@@ -190,25 +153,33 @@ func (p *Podcast) Format() *Item {
 		}{LargeType: p.Desc},
 		Icon: &Icon{Path: icon},
 		Mods: struct {
-			Cmd      *Mod `json:"cmd,omitempty"`
-			Alt      *Mod `json:"alt,omitempty"`
-			Shift    *Mod `json:"shift,omitempty"`
-			Ctrl     *Mod `json:"ctrl,omitempty"`
-			AltShift *Mod `json:"alt+shift,omitempty"`
+			Cmd       *Mod `json:"cmd,omitempty"`
+			Alt       *Mod `json:"alt,omitempty"`
+			Shift     *Mod `json:"shift,omitempty"`
+			Ctrl      *Mod `json:"ctrl,omitempty"`
+			Fn        *Mod `json:"fn,omitempty"`
+			AltShift  *Mod `json:"alt+shift,omitempty"`
+			CtrlShift *Mod `json:"ctrl+shift,omitempty"`
+			CmdShift  *Mod `json:"cmd+shift,omitempty"`
 		}{},
 	}
+
+	// ↵ list episodes
 	item.SetVar("trigger", "episodes")
-	item.SetVar("podcast", p.Name)
 	item.SetVar("podcastUuid", p.UUID)
 
+	// ⌥ refresh podcast
 	alt := &Mod{Subtitle: "Refresh podcast", Icon: &Icon{Path: "icons/refresh.png"}}
-	alt.SetVar("refresh", "podcasts/"+p.Name)
+	alt.SetVar("refresh", "podcast")
+	alt.SetVar("podcastUuid", p.UUID)
 	item.Mods.Alt = alt
 
+	// ⇧⌥ refresh all podcasts
 	altShift := &Mod{Subtitle: "Refresh all podcasts", Icon: &Icon{Path: "icons/refresh.png"}}
 	altShift.SetVar("refresh", "allPodcasts")
 	item.Mods.AltShift = altShift
 
+	// ⌃ unsubscribe podcast
 	ctrl := &Mod{Subtitle: "Unsubscribe", Icon: &Icon{Path: "icons/trash.png"}, Arg: p.URL}
 	ctrl.SetVar("action", "unsubscribe")
 	item.Mods.Ctrl = ctrl
@@ -220,6 +191,16 @@ func (e *Episode) Format() *Item {
 	if _, err := os.Stat(icon); err != nil {
 		icon = ""
 	}
+	if e.Duration == 0 {
+		p := &Podcast{UUID: e.PodcastUUID}
+		if err := p.GetEpisodes(false); err == nil {
+			if _e, ok := p.EpisodeMap[e.UUID]; ok {
+				e.Duration = _e.Duration
+				e.ShowNotes = _e.ShowNotes
+				e.Date = _e.Date
+			}
+		}
+	}
 	item := Item{
 		Title:        e.Title,
 		Subtitle:     fmt.Sprintf("􀉉 %s  ·  􀖈 %s", e.Date.Format("Mon, 2006-01-02"), formatDuration(e.Duration)),
@@ -230,45 +211,82 @@ func (e *Episode) Format() *Item {
 		Match:        matchString(e.Title, e.Podcast),
 		AutoComplete: e.Podcast,
 		Mods: struct {
-			Cmd      *Mod `json:"cmd,omitempty"`
-			Alt      *Mod `json:"alt,omitempty"`
-			Shift    *Mod `json:"shift,omitempty"`
-			Ctrl     *Mod `json:"ctrl,omitempty"`
-			AltShift *Mod `json:"alt+shift,omitempty"`
+			Cmd       *Mod `json:"cmd,omitempty"`
+			Alt       *Mod `json:"alt,omitempty"`
+			Shift     *Mod `json:"shift,omitempty"`
+			Ctrl      *Mod `json:"ctrl,omitempty"`
+			Fn        *Mod `json:"fn,omitempty"`
+			AltShift  *Mod `json:"alt+shift,omitempty"`
+			CtrlShift *Mod `json:"ctrl+shift,omitempty"`
+			CmdShift  *Mod `json:"cmd+shift,omitempty"`
 		}{},
 	}
-	item.SetVar("actionKeep", "addToQueue")
-	item.SetVar("podcast", e.Podcast)
-	item.SetVar("url", e.URL)
+	// ↵ add episode to end of queue
+	item.SetVar("actionKeep", "play_last")
 	item.SetVar("uuid", e.UUID)
 	item.SetVar("podcastUuid", e.PodcastUUID)
 
-	cmd := &Mod{Subtitle: "Play now", Icon: &Icon{Path: "icons/play.png"}}
-	cmd.SetVar("actionKeep", "play_now")
-	cmd.SetVar("url", e.URL)
+	// ⌘ add episode to top of queue
+	cmd := &Mod{Subtitle: "Play next", Icon: &Icon{Path: "icons/playNext.png"}}
+	cmd.SetVar("actionKeep", "play_next")
+	cmd.SetVar("uuid", e.UUID)
+	cmd.SetVar("podcastUuid", e.PodcastUUID)
 	item.Mods.Cmd = cmd
 
+	// ⌥ play episode now
+	alt := &Mod{Subtitle: "Play now", Icon: &Icon{Path: "icons/play.png"}}
+	alt.SetVar("actionKeep", "play_now")
+	alt.SetVar("uuid", e.UUID)
+	alt.SetVar("podcastUuid", e.PodcastUUID)
+	item.Mods.Alt = alt
+
+	// ⇧ list episodes of this podcast
 	shift := &Mod{Subtitle: "􀪔 " + e.Podcast}
 	shift.SetVar("trigger", "episodes")
-	shift.SetVar("podcast", e.Podcast)
+	shift.SetVar("podcastUuid", e.PodcastUUID)
 	item.Mods.Shift = shift
+
+	// ⌃ mark episode as played
+	ctrl := &Mod{Subtitle: "Mark as played", Icon: &Icon{Path: "icons/check.png"}}
+	ctrl.SetVar("actionKeep", "markAsPlayed")
+	ctrl.SetVar("uuid", e.UUID)
+	ctrl.SetVar("podcastUuid", e.PodcastUUID)
+	item.Mods.Ctrl = ctrl
+
+	// ⌃⇧ archive episode
+	ctrlShift := &Mod{Subtitle: "Archive", Icon: &Icon{Path: "icons/archive.png"}}
+	ctrlShift.SetVar("actionKeep", "archive")
+	ctrlShift.SetVar("uuid", e.UUID)
+	ctrlShift.SetVar("podcastUuid", e.PodcastUUID)
+	item.Mods.CtrlShift = ctrlShift
+
 	return &item
 }
 
-func generatePlaylist() (string, error) {
-	episodes, err := GetUpNext(false)
-	if err != nil {
-		return "", err
+func upNextSummary(episodes []*Episode) {
+	if len(episodes) == 0 {
+		return
 	}
-	list := make([]string, 0, len(episodes)*2)
+	var totalDuration int
 	for _, e := range episodes {
-		list = append(list, fmt.Sprintf("%s —— %s", e.Podcast, e.Title))
-		list = append(list, e.URL)
+		totalDuration += e.Duration
 	}
-	file := fmt.Sprintf("Podcasts (%dx) %s.m3u", len(episodes), time.Now().Format("2006-01-02 15.04.05"))
-	file = getCachePath(file)
-	if err := writeCache(file, []byte(strings.Join(list, "\n"))); err != nil {
-		return "", err
+	item := Item{
+		Title:    fmt.Sprintf("%d Episodes, %s Remaining", len(episodes), formatDuration(totalDuration)),
+		Subtitle: "Append playlist",
+		Icon:     &Icon{Path: "icons/play.png"},
 	}
-	return file, nil
+	// ↵ append playlist
+	item.SetVar("actionKeep", "insert-next-play")
+
+	// ⌘ replace playlist
+	cmd := &Mod{Subtitle: "Replace playlist", Icon: &Icon{Path: "icons/play.png"}}
+	cmd.SetVar("action", "replace")
+	item.Mods.Cmd = cmd
+
+	// ⌥ refresh queue
+	alt := &Mod{Subtitle: "Refresh queue", Icon: &Icon{Path: "icons/refresh.png"}}
+	alt.SetVar("refresh", "up_next")
+	item.Mods.Alt = alt
+	workflow.UnshiftItem(&item)
 }

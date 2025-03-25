@@ -1,9 +1,8 @@
-# Development Note
+# Development Notes
 
 ## To-Do
 
-- [ ] UI
-    - Embed actions
+- [x] UI: Embed actions
 - [x] Change the cache file name to UUID
 - [x] Caching logic
 - [x] Create functions to interact with Pocket Casts API

@@ -168,7 +168,7 @@ func PocketCastsLogin(email, password string) error {
 	return nil
 }
 
-func GetPodcasts(force bool) error {
+func GetPodcastList(force bool) error {
 	if !force && len(podcastMap) > 0 {
 		return nil
 	}
@@ -200,6 +200,7 @@ func GetPodcasts(force bool) error {
 			Author:      p.Author,
 			Desc:        p.Desc,
 			LastUpdated: p.LastUpdated,
+			Image:       fmt.Sprintf("https://static.pocketcasts.com/discover/images/webp/200/%s.webp", p.UUID),
 		}
 		podcastMap[p.UUID] = _p
 	}
@@ -221,7 +222,7 @@ func GetUpNext(force bool) ([]*Episode, error) {
 			return episodeMap, nil
 		}
 	}
-	if err := GetPodcasts(force); err != nil {
+	if err := GetPodcastList(force); err != nil {
 		return nil, err
 	}
 	body := map[string]any{
@@ -240,7 +241,7 @@ func GetUpNext(force bool) ([]*Episode, error) {
 func processUpNextResponse(response *PocketCastsUpNextResponse) ([]*Episode, error) {
 	episodeMap := make(map[string]*Episode)
 	if len(podcastMap) == 0 {
-		GetPodcasts(false)
+		GetPodcastList(false)
 	}
 	episodes := make([]*Episode, len(response.Episodes))
 
@@ -291,7 +292,7 @@ func GetList(list string, force bool) ([]*Episode, error) {
 		return nil, fmt.Errorf("invalid list: %s", list)
 	}
 	episodes := make([]*Episode, 0)
-	maxAge := 1 * time.Hour
+	maxAge := 12 * time.Hour
 	if force {
 		maxAge = 0
 	}
@@ -302,7 +303,7 @@ func GetList(list string, force bool) ([]*Episode, error) {
 			return episodes, nil
 		}
 	}
-	if err := GetPodcasts(force); err != nil {
+	if err := GetPodcastList(force); err != nil {
 		return nil, err
 	}
 	body := map[string]any{}
@@ -387,7 +388,7 @@ func (p *Podcast) GetEpisodes(force bool) error {
 func (p *Podcast) resolveMetadata() error {
 	if p.UUID == "" {
 		if p.Name != "" {
-			if err := GetPodcasts(false); err == nil {
+			if err := GetPodcastList(false); err == nil {
 				for _, _p := range podcastMap {
 					if _p.Name == p.Name {
 						p.UUID = _p.UUID

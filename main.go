@@ -32,15 +32,11 @@ func setup() {
 
 func performAction(action string) {
 	switch action {
-	case "play_now":
-		if err := PlayEpisode(os.Getenv("url"), ""); err != nil {
-			Notify(err.Error(), "Error")
-		}
-	case "syncPlaylist":
+	case "insert-next-play", "replace":
 		if playlist, err := generatePlaylist(); err == nil {
-			loadPlaylist(playlist, "insert-next-play")
+			loadPlaylist(playlist, action)
 		}
-	case "play_next", "play_last":
+	case "play_now", "play_next", "play_last":
 		p := &Podcast{
 			UUID: os.Getenv("podcastUuid"),
 		}
@@ -48,6 +44,10 @@ func performAction(action string) {
 		if e, ok := p.EpisodeMap[os.Getenv("uuid")]; ok {
 			if _, err := e.AddToQueue(action); err != nil {
 				Notify(err.Error(), "Error")
+			} else if action == "play_now" {
+				if playlist, err := generatePlaylist(); err == nil {
+					loadPlaylist(playlist, "replace")
+				}
 			} else {
 				Notify("Added to queue: " + e.Title)
 			}
@@ -115,7 +115,7 @@ func main() {
 
 	if os.Getenv("refresh") != "" {
 		refreshCache([]string{os.Getenv("refresh"), os.Getenv("podcastUuid")})
-		workflow.SetVar("refresh", "")
+		return
 	} else if action != "" {
 		performAction(action)
 		fmt.Println(`{"alfredworkflow":{"variables":{"action":""}}}`)

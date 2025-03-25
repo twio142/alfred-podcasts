@@ -53,7 +53,7 @@ func TestPocketCastsLogin(t *testing.T) {
 	}
 }
 
-func TestPocketCastsGetPodcasts(t *testing.T) {
+func TestPocketCastsGetPodcastList(t *testing.T) {
 	tests := []struct {
 		name    string
 		force   bool
@@ -72,15 +72,15 @@ func TestPocketCastsGetPodcasts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotErr := main.GetPodcasts(tt.force)
+			gotErr := main.GetPodcastList(tt.force)
 			if gotErr != nil {
 				if !tt.wantErr {
-					t.Errorf("PocketCastsGetPodcasts() failed: %v", gotErr)
+					t.Errorf("GetPodcastList() failed: %v", gotErr)
 				}
 				return
 			}
 			if tt.wantErr {
-				t.Fatal("PocketCastsGetPodcasts() succeeded unexpectedly")
+				t.Fatal("GetPodcastList() succeeded unexpectedly")
 				return
 			}
 		})
