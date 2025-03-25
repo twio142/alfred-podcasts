@@ -37,7 +37,7 @@ func formatDuration(duration int) string {
 }
 
 func downloadImage(url string, path string) {
-	scpt := fmt.Sprintf("curl -m 10 -o '%s' '%s' && file --mime-type -b '%s' | grep -q '^image/' && sips -Z 256 '%s' || rm -f '%s'", path, url, path, path, path)
+	scpt := fmt.Sprintf("curl -m 10 -o '%s' '%s' && file --mime-type -b '%s' | grep -q '^image/' || rm -f '%s'", path, url, path, path)
 	cmd := exec.Command("/bin/sh", "-c", scpt)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setsid: true,
@@ -116,7 +116,7 @@ func refreshCache(refreshTarget []string) error {
 		p := &Podcast{UUID: refreshTarget[1]}
 		return p.GetEpisodes(true)
 	case "allPodcasts":
-		GetAllPodcasts(true)
+		return GetAllPodcasts(true)
 	case "up_next":
 		_, err := GetUpNext(true)
 		return err

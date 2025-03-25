@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 	"sync"
@@ -38,12 +39,11 @@ type Episode struct {
 }
 
 func GetAllPodcasts(force bool) error {
-	sem := semaphore.NewWeighted(50)
-
-	if err := GetPodcasts(force); err != nil {
+	if err := GetPodcastList(force); err != nil {
 		return err
 	}
 
+	sem := semaphore.NewWeighted(50)
 	var wg sync.WaitGroup
 	for _, p := range podcastMap {
 		wg.Add(1)
@@ -114,7 +114,7 @@ func (p *Podcast) ClearCache() {
 	os.Remove(getCachePath("artworks", p.UUID))
 }
 
-func (e *Episode) CacheShownote() string {
+func (e *Episode) CacheShownotes() string {
 	file := getCachePath("shownotes", fmt.Sprintf("%s.%s.md", e.PodcastUUID, e.UUID))
 	if _, err := os.Stat(file); err == nil {
 		return file
@@ -135,4 +135,46 @@ func (e *Episode) CacheShownote() string {
 	}
 	os.WriteFile(file, []byte(showNotes), 0644)
 	return file
+}
+
+func GetPlaying() {
+	title := os.Getenv("title")
+	author := os.Getenv("author")
+	podcast := os.Getenv("podcast")
+	if title == "" {
+		cmd := exec.Command("nowplaying-cli", "get", "title", "artist", "album")
+		if out, err := cmd.Output(); err == nil {
+			output := strings.Split(string(out), "\n")
+			title = output[0]
+			author = output[1]
+			podcast = output[1]
+		}
+	}
+	if e := FindEpisode(map[string]string{"title": title, "podcast": podcast, "author": author}); e != nil {
+		item := e.Format()
+		valid := false
+		item.Valid = &valid
+		item.Mods.Cmd = nil
+		workflow.AddItem(item)
+	} else {
+		workflow.WarnEmpty("No Episode Playing")
+	}
+}
+
+func ExportPlaylist() (string, error) {
+	episodes, err := GetUpNext(false)
+	if err != nil {
+		return "", err
+	}
+	list := make([]string, 0, len(episodes)*2)
+	for _, e := range episodes {
+		list = append(list, fmt.Sprintf("# %s\t%s", e.Podcast, e.Title))
+		list = append(list, e.URL)
+	}
+	file := "Podcast Playlist.m3u"
+	file = getCachePath(file)
+	if err := writeCache(file, []byte(strings.Join(list, "\n"))); err != nil {
+		return "", err
+	}
+	return file, nil
 }

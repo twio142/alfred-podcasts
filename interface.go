@@ -191,7 +191,7 @@ func (e *Episode) Format() *Item {
 	if _, err := os.Stat(icon); err != nil {
 		icon = ""
 	}
-	if e.Duration == 0 {
+	if e.Duration == 0 || e.ShowNotes == "" {
 		p := &Podcast{UUID: e.PodcastUUID}
 		if err := p.GetEpisodes(false); err == nil {
 			if _e, ok := p.EpisodeMap[e.UUID]; ok {
@@ -206,7 +206,7 @@ func (e *Episode) Format() *Item {
 		Subtitle:     fmt.Sprintf("􀉉 %s  ·  􀖈 %s", e.Date.Format("Mon, 2006-01-02"), formatDuration(e.Duration)),
 		Arg:          e.URL,
 		UID:          e.UUID,
-		QuickLookURL: e.CacheShownote(),
+		QuickLookURL: e.CacheShownotes(),
 		Icon:         &Icon{Path: icon},
 		Match:        matchString(e.Title, e.Podcast),
 		AutoComplete: e.Podcast,

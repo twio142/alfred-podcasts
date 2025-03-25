@@ -33,7 +33,7 @@ func setup() {
 func performAction(action string) {
 	switch action {
 	case "insert-next-play", "replace":
-		if playlist, err := generatePlaylist(); err == nil {
+		if playlist, err := ExportPlaylist(); err == nil {
 			loadPlaylist(playlist, action)
 		}
 	case "play_now", "play_next", "play_last":
@@ -45,7 +45,7 @@ func performAction(action string) {
 			if _, err := e.AddToQueue(action); err != nil {
 				Notify(err.Error(), "Error")
 			} else if action == "play_now" {
-				if playlist, err := generatePlaylist(); err == nil {
+				if playlist, err := ExportPlaylist(); err == nil {
 					loadPlaylist(playlist, "replace")
 				}
 			} else {
