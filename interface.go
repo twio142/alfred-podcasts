@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"sync"
 )
 
 func ListPodcasts() {
@@ -137,7 +138,7 @@ func (p *Podcast) ListEpisodes() {
 	workflow.AddItem(&item)
 }
 
-func (p *Podcast) Format() *Item {
+func (p *Podcast) Format(search bool) *Item {
 	icon := &Icon{Path: getCachePath("artworks", p.UUID)}
 	_, err := os.Stat(icon.Path)
 	if err != nil {
@@ -170,21 +171,39 @@ func (p *Podcast) Format() *Item {
 	item.SetVar("trigger", "episodes")
 	item.SetVar("podcastUuid", p.UUID)
 
-	// ⌥ refresh podcast
-	alt := &Mod{Subtitle: "Refresh podcast", Icon: &Icon{Path: "icons/refresh.png"}}
-	alt.SetVar("refresh", "podcast")
-	alt.SetVar("podcastUuid", p.UUID)
-	item.Mods.Alt = alt
+	if search {
+		item.Subtitle = "􀊱 " + p.Author
+		// ⌘ subscribe / unsubsribe podcast
+		var cmd *Mod
+		if _, ok := podcastMap[p.UUID]; ok {
+			item.Title = "􀁢 " + item.Title
+			cmd = &Mod{Subtitle: "Unsubscribe", Icon: &Icon{Path: "icons/trash.png"}}
+			cmd.SetVar("actionKeep", "unsubscribe")
+		} else {
+			cmd = &Mod{Subtitle: "Subscribe", Icon: &Icon{Path: "icons/plus.png"}}
+			cmd.SetVar("actionKeep", "subscribe")
+		}
+		cmd.SetVar("podcastUuid", p.UUID)
+		cmd.SetVar("podcast", p.Name)
+		item.Mods.Cmd = cmd
+	} else {
+		// ⌥ refresh podcast
+		alt := &Mod{Subtitle: "Refresh podcast", Icon: &Icon{Path: "icons/refresh.png"}}
+		alt.SetVar("refresh", "podcast")
+		alt.SetVar("podcastUuid", p.UUID)
+		item.Mods.Alt = alt
 
-	// ⇧⌥ refresh all podcasts
-	altShift := &Mod{Subtitle: "Refresh all podcasts", Icon: &Icon{Path: "icons/refresh.png"}}
-	altShift.SetVar("refresh", "allPodcasts")
-	item.Mods.AltShift = altShift
+		// ⇧⌥ refresh all podcasts
+		altShift := &Mod{Subtitle: "Refresh all podcasts", Icon: &Icon{Path: "icons/refresh.png"}}
+		altShift.SetVar("refresh", "allPodcasts")
+		item.Mods.AltShift = altShift
 
-	// ⌃ unsubscribe podcast
-	ctrl := &Mod{Subtitle: "Unsubscribe", Icon: &Icon{Path: "icons/trash.png"}, Arg: p.URL}
-	ctrl.SetVar("action", "unsubscribe")
-	item.Mods.Ctrl = ctrl
+		// ⌃ unsubscribe podcast
+		ctrl := &Mod{Subtitle: "Unsubscribe", Icon: &Icon{Path: "icons/trash.png"}}
+		ctrl.SetVar("action", "unsubscribe")
+		ctrl.SetVar("podcastUuid", p.UUID)
+		item.Mods.Ctrl = ctrl
+	}
 	return &item
 }
 
@@ -297,4 +316,37 @@ func upNextSummary(episodes []*Episode) {
 	alt.SetVar("refresh", "up_next")
 	item.Mods.Alt = alt
 	workflow.UnshiftItem(&item)
+}
+
+func Search(query string) error {
+	var searchResults []*Podcast
+	var searchErr, listErr error
+	var wg sync.WaitGroup
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		listErr = GetPodcastList(false)
+	}()
+	go func() {
+		defer wg.Done()
+		searchResults, searchErr = SearchPodcasts(query)
+	}()
+	wg.Wait()
+
+	if listErr != nil {
+		return listErr
+	}
+	if searchErr != nil {
+		return searchErr
+	}
+	if len(searchResults) == 0 {
+		workflow.WarnEmpty("No Podcasts Found")
+		return nil
+	}
+	for _, p := range searchResults {
+		item := p.Format(true)
+		workflow.AddItem(item)
+	}
+	return nil
 }

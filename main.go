@@ -65,20 +65,27 @@ func performAction(action string) {
 			Notify("Archived: " + e.Title)
 		}
 	case "subscribe":
-		p := &Podcast{URL: os.Args[1]}
+		p := &Podcast{UUID: os.Getenv("podcastUuid"), Name: os.Getenv("podcast")}
 		if err := p.Subscribe(); err != nil {
 			Notify(err.Error(), "Error")
 		} else {
+			if p.Name == "" {
+				p.GetInfo()
+			}
 			Notify("Subscribed to " + p.Name)
+			GetPodcastList(true)
 		}
 	case "unsubscribe":
-		p := &Podcast{UUID: os.Getenv("podcastUuid")}
-		p.GetEpisodes(false)
+		p := &Podcast{UUID: os.Getenv("podcastUuid"), Name: os.Getenv("podcast")}
+		if p.Name == "" {
+			p.GetInfo()
+		}
 		if err := p.Unsubscribe(); err != nil {
 			Notify(err.Error(), "Error")
 		} else {
 			Notify("Unsubscribed from " + p.Name)
 			p.ClearCache()
+			GetPodcastList(true)
 		}
 	default:
 		// do nothing
@@ -99,6 +106,8 @@ func runTrigger(trigger string) {
 		ListUpNext()
 	case "playing":
 		GetPlaying()
+	case "search":
+		Search(os.Args[1])
 	case "test":
 		log.Println("test")
 	default:
