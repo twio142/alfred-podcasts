@@ -3,6 +3,7 @@
 ## To-Do
 
 - [ ] Test
+- [x] In `ExportPlaylist`, add timestamp to URLs according to the `playedUpTo` field
 - [x] Implement podcast searching
 - [x] UI: Embed actions
 - [x] Change the cache file name to UUID

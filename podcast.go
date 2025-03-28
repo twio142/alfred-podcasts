@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"regexp"
@@ -177,7 +178,20 @@ func ExportPlaylist() (string, error) {
 	list := make([]string, 0, len(episodes)*2)
 	for _, e := range episodes {
 		list = append(list, fmt.Sprintf("# %s\t%s", e.Podcast, e.Title))
-		list = append(list, e.URL)
+		u := e.URL
+		if e.PlayedUpTo > 0 {
+			// NOTE: add timestamp to URL
+			// requires custom configs in mpv (event handling)
+			parsedURL, err := url.Parse(u)
+			if err != nil {
+				return "", fmt.Errorf("failed to parse URL %s: %v", u, err)
+			}
+			q := parsedURL.Query()
+			q.Set("t", fmt.Sprintf("%d", e.PlayedUpTo))
+			parsedURL.RawQuery = q.Encode()
+			u = parsedURL.String()
+		}
+		list = append(list, u)
 	}
 	file := "podcast_playlist.m3u"
 	file = getCachePath(file)
