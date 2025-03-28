@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"golang.org/x/sync/semaphore"
@@ -110,8 +111,15 @@ func (p *Podcast) CacheArtwork() {
 }
 
 func (p *Podcast) ClearCache() {
-	os.Remove(getCachePath("podcasts", p.UUID))
-	os.Remove(getCachePath("artworks", p.UUID))
+	if p.UUID == "" {
+		return
+	}
+	scpt := fmt.Sprintf(`find "%s" -type f -name "%s*" -delete`, cacheDir, p.UUID)
+	cmd := exec.Command("/bin/sh", "-c", scpt)
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setsid: true,
+	}
+	cmd.Start()
 }
 
 func (e *Episode) CacheShownotes() string {
@@ -151,7 +159,7 @@ func GetPlaying() {
 		}
 	}
 	if e := FindEpisode(map[string]string{"title": title, "podcast": podcast, "author": author}); e != nil {
-		item := e.Format()
+		item := e.Format(false)
 		valid := false
 		item.Valid = &valid
 		item.Mods.Cmd = nil
@@ -171,7 +179,7 @@ func ExportPlaylist() (string, error) {
 		list = append(list, fmt.Sprintf("# %s\t%s", e.Podcast, e.Title))
 		list = append(list, e.URL)
 	}
-	file := "Podcast Playlist.m3u"
+	file := "podcast_playlist.m3u"
 	file = getCachePath(file)
 	if err := writeCache(file, []byte(strings.Join(list, "\n"))); err != nil {
 		return "", err

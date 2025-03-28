@@ -9,6 +9,7 @@ import (
 var (
 	cacheDir   = os.Getenv("alfred_workflow_cache")
 	podcastMap map[string]*Podcast
+	upNextMap  map[string]*Episode
 	workflow   = Workflow{}
 )
 
@@ -115,6 +116,7 @@ func main() {
 
 	if os.Getenv("refresh") != "" {
 		refreshCache([]string{os.Getenv("refresh"), os.Getenv("podcastUuid")})
+		fmt.Println(`{"alfredworkflow":{"variables":{"refresh":""}}}`)
 		return
 	} else if action != "" {
 		performAction(action)

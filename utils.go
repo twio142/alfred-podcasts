@@ -71,8 +71,12 @@ func writeCache(path string, data []byte) error {
 }
 
 func clearOldCache() {
-	cmd := exec.Command("find", cacheDir+"/shownotes", "-type", "f", "-mtime", "+30", "-exec", "rm", "{}", ";")
-	cmd.Run()
+	scpt := fmt.Sprintf("find '%s' -type f -mtime +60 -delete", cacheDir+"/shownotes")
+	cmd := exec.Command("/bin/sh", "-c", scpt)
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setsid: true,
+	}
+	cmd.Start()
 }
 
 func getLockFile(refreshTarget []string) string {
@@ -116,6 +120,7 @@ func refreshCache(refreshTarget []string) error {
 		p := &Podcast{UUID: refreshTarget[1]}
 		return p.GetEpisodes(true)
 	case "allPodcasts":
+		clearOldCache()
 		return GetAllPodcasts(true)
 	case "up_next":
 		_, err := GetUpNext(true)
@@ -124,12 +129,11 @@ func refreshCache(refreshTarget []string) error {
 		_, err := GetList(target, true)
 		return err
 	}
-	return nil
 }
 
 func Notify(message string, t ...string) {
 	cmd := exec.Command("terminal-notifier")
-	cmd.Args = append(cmd.Args, "-message", message, "-sender", "com.runningwithcrayons.Alfred", "-contentImage", "icons/podcast.png", "-title")
+	cmd.Args = append(cmd.Args, "-message", message, "-sender", "com.runningwithcrayons.Alfred", "-contentImage", "icon.png", "-title")
 	if len(t) > 0 && t[0] != "" {
 		cmd.Args = append(cmd.Args, t[0])
 	} else {

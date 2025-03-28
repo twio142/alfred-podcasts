@@ -2,6 +2,7 @@
 
 ## To-Do
 
+- [ ] Test
 - [x] UI: Embed actions
 - [x] Change the cache file name to UUID
 - [x] Caching logic

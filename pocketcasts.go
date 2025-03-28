@@ -53,7 +53,7 @@ type PocketCastsPodcastsResponse struct {
 		Author      string    `json:"author"`
 		Link        string    `json:"url"`
 		Desc        string    `json:"description"`
-		LastUpdated time.Time `json:"latestEpisodePublished"`
+		LastUpdated time.Time `json:"lastEpisodePublished"`
 	} `json:"podcasts"`
 }
 
@@ -69,6 +69,7 @@ type PocketCastsEpisodesResponse struct {
 			Title     string    `json:"title"`
 			URL       string    `json:"url"`
 			ShowNotes string    `json:"show_notes"`
+			Image     string    `json:"image"`
 			Date      time.Time `json:"published"`
 			Duration  int       `json:"duration"`
 		}
@@ -108,11 +109,6 @@ func PocketCastsRequest(endpoint string, body *map[string]any, response any) err
 		}
 		headers["Authorization"] = "Bearer " + pocketCastsToken
 	}
-	// TEST:
-	fmt.Println("URL: ", URL)
-	fmt.Println("Method: ", method)
-	fmt.Println("Headers: ", headers)
-	fmt.Println("Body: ", body)
 	client := &http.Client{
 		Timeout: 15 * time.Second,
 	}
@@ -172,7 +168,7 @@ func GetPodcastList(force bool) error {
 	if !force && len(podcastMap) > 0 {
 		return nil
 	}
-	maxAge := 7 * 24 * time.Hour
+	maxAge := 24 * time.Hour
 	if force {
 		maxAge = 0
 	}
@@ -210,7 +206,7 @@ func GetPodcastList(force bool) error {
 }
 
 func GetUpNext(force bool) ([]*Episode, error) {
-	episodeMap := make([]*Episode, 0)
+	episodes := make([]*Episode, 0)
 	maxAge := 30 * time.Minute
 	if force {
 		maxAge = 0
@@ -218,8 +214,12 @@ func GetUpNext(force bool) ([]*Episode, error) {
 	file := getCachePath("up_next")
 
 	if data, err := readCache(file, maxAge, "up_next"); err == nil {
-		if err := json.Unmarshal(data, &episodeMap); err == nil {
-			return episodeMap, nil
+		if err := json.Unmarshal(data, &episodes); err == nil {
+			upNextMap = make(map[string]*Episode)
+			for _, e := range episodes {
+				upNextMap[e.UUID] = e
+			}
+			return episodes, nil
 		}
 	}
 	if err := GetPodcastList(force); err != nil {
@@ -239,7 +239,7 @@ func GetUpNext(force bool) ([]*Episode, error) {
 }
 
 func processUpNextResponse(response *PocketCastsUpNextResponse) ([]*Episode, error) {
-	episodeMap := make(map[string]*Episode)
+	upNextMap = make(map[string]*Episode)
 	if len(podcastMap) == 0 {
 		GetPodcastList(false)
 	}
@@ -265,7 +265,7 @@ func processUpNextResponse(response *PocketCastsUpNextResponse) ([]*Episode, err
 			Date:        e.Date,
 			Image:       fmt.Sprintf("https://static.pocketcasts.com/discover/images/webp/200/%s.webp", e.PodcastUUID),
 		}
-		episodeMap[e.UUID] = _e
+		upNextMap[e.UUID] = _e
 		episodes[i] = _e
 		if p.EpisodeMap == nil {
 			p.EpisodeMap = make(map[string]*Episode)
@@ -274,7 +274,7 @@ func processUpNextResponse(response *PocketCastsUpNextResponse) ([]*Episode, err
 	}
 
 	for _, e := range response.EpisodeSync {
-		if episode, ok := episodeMap[e.UUID]; ok {
+		if episode, ok := upNextMap[e.UUID]; ok {
 			episode.PlayedUpTo = e.PlayedUpTo
 			episode.Duration = e.Duration
 		}
@@ -461,6 +461,9 @@ func (p *Podcast) fetchAndUpdateEpisodes() error {
 	for _, e := range result2.response.Podcast.Episodes {
 		if _e, ok := p.EpisodeMap[e.UUID]; ok {
 			_e.ShowNotes = e.ShowNotes
+			if e.Image != "" {
+				_e.Image = e.Image
+			}
 		}
 	}
 

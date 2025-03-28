@@ -22,7 +22,7 @@ func ListPodcasts() {
 		return
 	}
 	for _, p := range podcastMap {
-		workflow.AddItem(p.Format())
+		workflow.AddItem(p.Format(false))
 	}
 	sort.Slice(workflow.Items, func(i, j int) bool {
 		_i := workflow.Items[i].UID
@@ -47,14 +47,9 @@ func ListNewReleases() {
 		workflow.AddItem(&item)
 		return
 	}
-	for i, e := range episodes {
-		item := e.Format()
-		if i == 1 {
-			item.Mods.Alt = nil
-		}
-		if i < 3 {
-			item.Mods.Cmd = nil
-		}
+	GetUpNext(false)
+	for _, e := range episodes {
+		item := e.Format(true)
 		//  refresh new releases
 		fn := &Mod{Subtitle: "Refresh new releases", Icon: &Icon{Path: "icons/refresh.png"}}
 		fn.SetVar("refresh", "new_release")
@@ -79,8 +74,14 @@ func ListUpNext() {
 		workflow.AddItem(&item)
 		return
 	}
-	for _, e := range episodes {
-		item := e.Format()
+	for i, e := range episodes {
+		item := e.Format(false)
+		if i == 0 {
+			item.Mods.Alt = nil
+		}
+		if i < 2 {
+			item.Mods.Cmd = nil
+		}
 		// ↵ do nothing
 		item.SetVar("actionKeep", "noop")
 		workflow.AddItem(item)
@@ -109,11 +110,12 @@ func (p *Podcast) ListEpisodes() {
 	sort.Slice(episodes, func(i, j int) bool {
 		return episodes[i].Date.After(episodes[j].Date)
 	})
+	GetUpNext(false)
 	for i, e := range episodes {
 		if i == 30 {
 			break
 		}
-		item := e.Format()
+		item := e.Format(true)
 		item.Subtitle = fmt.Sprintf("􀪔 %s  ·  %s", e.Podcast, item.Subtitle)
 		item.Match = matchString(e.Title)
 		item.AutoComplete = ""
@@ -136,10 +138,10 @@ func (p *Podcast) ListEpisodes() {
 }
 
 func (p *Podcast) Format() *Item {
-	icon := getCachePath("artworks", p.UUID)
-	_, err := os.Stat(icon)
+	icon := &Icon{Path: getCachePath("artworks", p.UUID)}
+	_, err := os.Stat(icon.Path)
 	if err != nil {
-		icon = ""
+		icon = nil
 	}
 	item := Item{
 		Title:        p.Name,
@@ -151,7 +153,7 @@ func (p *Podcast) Format() *Item {
 			Copy      string `json:"copy,omitempty"`
 			LargeType string `json:"largetype,omitempty"`
 		}{LargeType: p.Desc},
-		Icon: &Icon{Path: icon},
+		Icon: icon,
 		Mods: struct {
 			Cmd       *Mod `json:"cmd,omitempty"`
 			Alt       *Mod `json:"alt,omitempty"`
@@ -186,10 +188,10 @@ func (p *Podcast) Format() *Item {
 	return &item
 }
 
-func (e *Episode) Format() *Item {
-	icon := getCachePath("artworks", e.PodcastUUID)
-	if _, err := os.Stat(icon); err != nil {
-		icon = ""
+func (e *Episode) Format(checkUpNext bool) *Item {
+	icon := &Icon{Path: getCachePath("artworks", e.PodcastUUID)}
+	if _, err := os.Stat(icon.Path); err != nil {
+		icon = nil
 	}
 	if e.Duration == 0 || e.ShowNotes == "" {
 		p := &Podcast{UUID: e.PodcastUUID}
@@ -198,6 +200,7 @@ func (e *Episode) Format() *Item {
 				e.Duration = _e.Duration
 				e.ShowNotes = _e.ShowNotes
 				e.Date = _e.Date
+				e.Image = _e.Image
 			}
 		}
 	}
@@ -207,7 +210,7 @@ func (e *Episode) Format() *Item {
 		Arg:          e.URL,
 		UID:          e.UUID,
 		QuickLookURL: e.CacheShownotes(),
-		Icon:         &Icon{Path: icon},
+		Icon:         icon,
 		Match:        matchString(e.Title, e.Podcast),
 		AutoComplete: e.Podcast,
 		Mods: struct {
@@ -220,6 +223,11 @@ func (e *Episode) Format() *Item {
 			CtrlShift *Mod `json:"ctrl+shift,omitempty"`
 			CmdShift  *Mod `json:"cmd+shift,omitempty"`
 		}{},
+	}
+	if checkUpNext {
+		if _, ok := upNextMap[e.UUID]; ok {
+			item.Title = "􀑬 " + item.Title
+		}
 	}
 	// ↵ add episode to end of queue
 	item.SetVar("actionKeep", "play_last")
@@ -273,7 +281,7 @@ func upNextSummary(episodes []*Episode) {
 	}
 	item := Item{
 		Title:    fmt.Sprintf("%d Episodes, %s Remaining", len(episodes), formatDuration(totalDuration)),
-		Subtitle: "Append playlist",
+		Subtitle: "Insert playlist",
 		Icon:     &Icon{Path: "icons/play.png"},
 	}
 	// ↵ append playlist

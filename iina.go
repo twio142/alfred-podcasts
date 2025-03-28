@@ -11,8 +11,6 @@ func runCommand(command ...any) (any, error) {
 	if len(command) == 0 {
 		return "", fmt.Errorf("no command provided")
 	}
-	// TEST:
-	fmt.Println(command...)
 	cmd := exec.Command("socat", "-", "/tmp/iina.sock")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
