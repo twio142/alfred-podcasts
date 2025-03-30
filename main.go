@@ -55,6 +55,10 @@ func performAction(action string) {
 		} else {
 			Notify("Episode not found", "Error")
 		}
+	case "sync":
+		if err := SyncPlaylist(); err != nil {
+			Notify(err.Error(), "Error")
+		}
 	case "markAsPlayed", "archive":
 		e := &Episode{UUID: os.Getenv("uuid"), PodcastUUID: os.Getenv("podcastUuid")}
 		if err := e.Archive(action == "markAsPlayed"); err != nil {

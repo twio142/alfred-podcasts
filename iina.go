@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
 	"os/exec"
+	"strings"
 )
 
 func runCommand(command ...any) (any, error) {
@@ -89,4 +91,82 @@ func loadPlaylist(file string, flag ...string) error {
 		return cmd.Run()
 	}
 	return nil
+}
+
+type PlaylistItem struct {
+	Filename     string `json:"filename"`
+	Current      bool   `json:"current"`
+	PlaylistPath string `json:"playlist-path"`
+}
+
+func readPlaylist() (map[string]*Episode, error) {
+	playlistPath := getCachePath("podcast_playlist.m3u")
+	content, err := os.ReadFile(playlistPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read playlist: %w", err)
+	}
+	lines := strings.Split(string(content), "\n")
+	episodeMap := make(map[string]*Episode)
+	var currentEpisode *Episode
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		if strings.HasPrefix(line, "# ") {
+			parts := strings.SplitN(line[2:], "\t", 2)
+			if len(parts) != 2 {
+				continue
+			}
+			currentEpisode = FindEpisode(map[string]string{"title": parts[1], "podcast": parts[0]})
+		} else if currentEpisode != nil {
+			episodeMap[line] = currentEpisode
+			currentEpisode = nil
+		}
+	}
+	return episodeMap, nil
+}
+
+func getPlaybackState() ([]*Episode, error) {
+	playlist, err := runCommand("get_property", "playlist")
+	if err != nil {
+		return nil, err
+	}
+	var items []PlaylistItem
+	playlistData, ok := playlist.([]any)
+	if !ok {
+		return nil, fmt.Errorf("no playlist found")
+	}
+	data, err := json.Marshal(playlistData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal playlist: %w", err)
+	}
+	if err = json.Unmarshal(data, &items); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal playlist: %w", err)
+	}
+
+	episodeMap, err := readPlaylist()
+	if err != nil {
+		return nil, err
+	}
+	var episodes []*Episode
+	for _, item := range items {
+		e, ok := episodeMap[item.Filename]
+		if !ok {
+			continue
+		}
+		episodes = append(episodes, e)
+		if item.Current {
+			if timePos, err := runCommand("get_property", "time-pos"); err == nil {
+				if pos, ok := timePos.(float64); ok {
+					e.PlayedUpTo = int(pos)
+				}
+			}
+			break
+		} else {
+			e.Played = true
+		}
+	}
+	return episodes, nil
 }

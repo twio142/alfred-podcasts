@@ -18,11 +18,11 @@ import (
 type Podcast struct {
 	Name        string              `json:"name"`
 	Author      string              `json:"author"`
-	URL         string              `json:"url"`
+	URL         string              `json:"-"`
 	Desc        string              `json:"desc"`
 	Image       string              `json:"image"`
 	Link        string              `json:"link"`
-	EpisodeMap  map[string]*Episode `json:"episodes"`
+	EpisodeMap  map[string]*Episode `json:"episodes,omitempty"`
 	LastUpdated time.Time           `json:"lastUpdated"`
 	UUID        string              `json:"uuid"`
 }
@@ -36,6 +36,7 @@ type Episode struct {
 	Date        time.Time `json:"date"`
 	Duration    int       `json:"duration"`
 	PlayedUpTo  int       `json:"playedUpTo"`
+	Played      bool      `json:"-"`
 	Image       string    `json:"image"`
 	UUID        string    `json:"uuid"`
 }
@@ -199,4 +200,30 @@ func ExportPlaylist() (string, error) {
 		return "", err
 	}
 	return file, nil
+}
+
+func SyncPlaylist() error {
+	episodes, err := getPlaybackState()
+	if err != nil {
+		return err
+	}
+	var errs []error
+	for _, e := range episodes {
+		if e.Played {
+			if err := e.Archive(true); err != nil {
+				errs = append(errs, err)
+			}
+		} else if e.PlayedUpTo > 0 {
+			if err := e.Update(map[string]any{
+				"position": fmt.Sprintf("%d", e.PlayedUpTo),
+				"status": 2,
+			}); err != nil {
+				errs = append(errs, err)
+			}
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("sync playlist errors: %v", errs)
+	}
+	return nil
 }

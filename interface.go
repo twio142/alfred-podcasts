@@ -308,13 +308,18 @@ func upNextSummary(episodes []*Episode) {
 
 	// ⌘ replace playlist
 	cmd := &Mod{Subtitle: "Replace playlist", Icon: &Icon{Path: "icons/play.png"}}
-	cmd.SetVar("action", "replace")
+	cmd.SetVar("actionKeep", "replace")
 	item.Mods.Cmd = cmd
 
 	// ⌥ refresh queue
 	alt := &Mod{Subtitle: "Refresh queue", Icon: &Icon{Path: "icons/refresh.png"}}
 	alt.SetVar("refresh", "up_next")
 	item.Mods.Alt = alt
+
+	// ⇧ sync playlist
+	shift := &Mod{Subtitle: "Sync playlist", Icon: &Icon{Path: "icons/sync.png"}}
+	shift.SetVar("action", "sync")
+	item.Mods.Shift = shift
 	workflow.UnshiftItem(&item)
 }
 

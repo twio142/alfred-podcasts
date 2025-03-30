@@ -64,7 +64,7 @@ func TestEpisode_QueueActions(t *testing.T) {
 			var gotErr error
 			switch tt.action {
 			case "remove":
-				got, gotErr = tt.episode.RemoveFromQueue()
+				got, gotErr = main.RemoveEpisodesFromQueue([]*main.Episode{tt.episode})
 			default:
 				got, gotErr = tt.episode.AddToQueue(tt.action)
 			}

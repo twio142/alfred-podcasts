@@ -1,8 +1,8 @@
 package main_test
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 
 	"github.com/twio142/alfred-podcasts"
 )
@@ -110,6 +110,32 @@ func TestExportPlaylist(t *testing.T) {
 			}
 			if true {
 				fmt.Printf("ExportPlaylist() = %v", got)
+			}
+		})
+	}
+}
+
+func TestSyncPlaylist(t *testing.T) {
+	tests := []struct {
+		name    string // description of this test case
+		wantErr bool
+	}{
+		{
+			name:    "sync playlist",
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotErr := main.SyncPlaylist()
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("SyncPlaylist() failed: %v", gotErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("SyncPlaylist() succeeded unexpectedly")
 			}
 		})
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 )
 
 func (e *Episode) AddToQueue(action string) ([]*Episode, error) {
@@ -35,13 +36,20 @@ func (e *Episode) AddToQueue(action string) ([]*Episode, error) {
 	return processUpNextResponse(&response)
 }
 
-func (e *Episode) RemoveFromQueue() ([]*Episode, error) {
-	if e.UUID == "" {
-		return nil, fmt.Errorf("episode UUID not set")
+func RemoveEpisodesFromQueue(episodes []*Episode) ([]*Episode, error) {
+	if len(episodes) == 0 {
+		return nil, fmt.Errorf("no episodes to remove")
+	}
+	uuidList := make([]string, len(episodes))
+	for i, e := range episodes {
+		if e.UUID == "" {
+			return nil, fmt.Errorf("episode UUID not set")
+		}
+		uuidList[i] = e.UUID
 	}
 	body := map[string]any{
 		"version": 2,
-		"uuids":   []string{e.UUID},
+		"uuids":   uuidList,
 	}
 	var response PocketCastsUpNextResponse
 	if err := PocketCastsRequest("/up_next/remove", &body, &response); err != nil {
@@ -50,33 +58,59 @@ func (e *Episode) RemoveFromQueue() ([]*Episode, error) {
 	return processUpNextResponse(&response)
 }
 
-func ArchiveEpisodes(episodes []*Episode) error {
-	body := map[string]any{
-		"episodes": make([]map[string]string, 0, len(episodes)),
-		"archive":  true,
+func ArchiveEpisodes(episodes []*Episode, markAsPlayed bool) error {
+	if len(episodes) == 0 {
+		return fmt.Errorf("no episodes to archive")
 	}
+	episodeList := make([]map[string]string, len(episodes))
 	for i, e := range episodes {
 		if e.UUID == "" || e.PodcastUUID == "" {
 			return fmt.Errorf("episode info missing")
 		}
-		body["episodes"].([]map[string]string)[i] = map[string]string{
+		if markAsPlayed {
+			e.Update(map[string]any{
+				"status": 3,
+			})
+		}
+		episodeList[i] = map[string]string{
 			"uuid":    e.UUID,
 			"podcast": e.PodcastUUID,
 		}
 	}
-	return PocketCastsRequest("/sync/update_episodes_archive", &body, nil)
+	body := map[string]any{
+		"episodes": episodeList,
+		"archive":  true,
+	}
+
+	var wg sync.WaitGroup
+	var archiveErr, queueErr error
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		archiveErr = PocketCastsRequest("/sync/update_episodes_archive", &body, nil)
+	}()
+
+	go func() {
+		defer wg.Done()
+		if _, err := RemoveEpisodesFromQueue(episodes); err != nil {
+			queueErr = err
+		}
+	}()
+
+	wg.Wait()
+
+	if archiveErr != nil {
+		return archiveErr
+	}
+	if queueErr != nil {
+		return queueErr
+	}
+	return nil
 }
 
 func (e *Episode) Archive(markAsPlayed bool) error {
-	if markAsPlayed {
-		if err := e.Update(map[string]any{
-			"status": 3,
-		}); err != nil {
-			return err
-		}
-	}
-	e.RemoveFromQueue()
-	return ArchiveEpisodes([]*Episode{e})
+	return ArchiveEpisodes([]*Episode{e}, markAsPlayed)
 }
 
 func (e *Episode) Update(body map[string]any) error {

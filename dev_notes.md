@@ -3,6 +3,7 @@
 ## To-Do
 
 - [ ] Test
+- [x] Support syncing the queue back to Pocket Casts
 - [x] In `ExportPlaylist`, add timestamp to URLs according to the `playedUpTo` field
 - [x] Implement podcast searching
 - [x] UI: Embed actions
