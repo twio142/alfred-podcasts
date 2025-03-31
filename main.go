@@ -105,13 +105,18 @@ func runTrigger(trigger string) {
 	case "episodes":
 		p := &Podcast{UUID: os.Getenv("podcastUuid")}
 		p.GetEpisodes(false)
-		p.ListEpisodes()
+		goBackTo := os.Getenv("prevTrigger")
+		p.ListEpisodes(goBackTo)
 	case "queue":
 		ListUpNext()
 	case "playing":
 		GetPlaying()
 	case "search":
-		Search(os.Args[1])
+		term := ""
+		if len(os.Args) > 1 {
+			term = os.Args[1]
+		}
+		Search(term)
 	case "test":
 		log.Println("test")
 	default:

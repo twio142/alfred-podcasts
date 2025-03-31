@@ -55,7 +55,7 @@ func TestPodcast_ListEpisodes(t *testing.T) {
 				t.Errorf("Podcast.ListEpisodes() error = %v", err)
 				return
 			}
-			tt.podcast.ListEpisodes()
+			tt.podcast.ListEpisodes("podcasts")
 		})
 	}
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 )
@@ -223,5 +224,8 @@ func SearchPodcasts(term string) ([]*Podcast, error) {
 			Image:  fmt.Sprintf("https://static.pocketcasts.com/discover/images/webp/200/%s.webp", podcast.UUID),
 		}
 	}
+	file := getCachePath("search_results")
+	data, _ := json.Marshal(podcasts)
+	writeCache(file, data)
 	return podcasts, nil
 }
