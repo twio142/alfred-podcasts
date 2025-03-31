@@ -1,4 +1,4 @@
-module github.com/twio142/go-podcast
+module github.com/twio142/alfred-podcasts
 
 go 1.22.1
 
@@ -12,5 +12,6 @@ require (
 
 require (
 	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466 // indirect
 )
