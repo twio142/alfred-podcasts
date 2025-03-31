@@ -2,32 +2,24 @@
 
 ![icon](icon.png)
 
-A personal project for managing podcasts in Alfred.
+A personal project for managing podcasts in Alfred through [Pocket Casts](https://pocketcasts.com/) API.
 
 ## Features
-
-### Subscriptions
-
-The workflow fetches Podcast feeds from a URL, in OPML format.
-
-I export my podcast subscriptions and push them to a GitHub repository to keep them in sync.
-You need to provide an API token, if the repository is private.
-
-You can unsubscribe a podcast, or add a new subscription by providing the RSS feed URL.
-The workflow will push the updated OPML file to your repository.
 
 ### Media Player Integration
 
 I use [IINA](https://github.com/iina/iina) to play podcasts, which supports IPC control via a socket.
 
-The workflow can play podcasts in IINA, and keep track of the playlist.
+The workflow can export the upcoming episode to a playlist for IINA, and sync the playback status back to Pocket Casts.
+
+You can also use Pocket Casts' web player to play your podcasts.
 
 ### Usage
 
 - `pc` to list all podcasts
-- `pcl` to list the latest episodes
-- `pcn` to list now playing episodes
-- `pca` to add a podcast
+- `pcl` to list latest episodes
+- `pcq` to list upcoming episodes (queue)
+- `pcs` to search for podcasts for subscribing and unsubscribing
 
 ## Installation
 

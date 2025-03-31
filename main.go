@@ -7,13 +7,13 @@ import (
 )
 
 var (
-	cacheDir    = os.Getenv("alfred_workflow_cache")
-	allPodcasts []*Podcast
-	podcast     *Podcast
-	workflow    = Workflow{}
+	cacheDir   = os.Getenv("alfred_workflow_cache")
+	podcastMap map[string]*Podcast
+	upNextMap  map[string]*Episode
+	workflow   = Workflow{}
 )
 
-func main() {
+func setup() {
 	if _, err := os.Stat(cacheDir + "/podcasts"); os.IsNotExist(err) {
 		if err = os.MkdirAll(cacheDir+"/podcasts", 0755); err != nil {
 			log.Fatal(err)
@@ -29,101 +29,122 @@ func main() {
 			log.Fatal(err)
 		}
 	}
+}
+
+func performAction(action string) {
+	switch action {
+	case "insert-next-play", "replace":
+		if playlist, err := ExportPlaylist(); err == nil {
+			loadPlaylist(playlist, action)
+		}
+	case "play_now", "play_next", "play_last":
+		p := &Podcast{
+			UUID: os.Getenv("podcastUuid"),
+		}
+		p.GetEpisodes(false)
+		if e, ok := p.EpisodeMap[os.Getenv("uuid")]; ok {
+			if _, err := e.AddToQueue(action); err != nil {
+				Notify(err.Error(), "Error")
+			} else if action == "play_now" {
+				if playlist, err := ExportPlaylist(); err == nil {
+					loadPlaylist(playlist, "replace")
+				}
+			} else {
+				Notify("Added to queue: " + e.Title)
+			}
+		} else {
+			Notify("Episode not found", "Error")
+		}
+	case "sync":
+		if err := SyncPlaylist(); err != nil {
+			Notify(err.Error(), "Error")
+		}
+	case "markAsPlayed", "archive":
+		e := &Episode{UUID: os.Getenv("uuid"), PodcastUUID: os.Getenv("podcastUuid")}
+		if err := e.Archive(action == "markAsPlayed"); err != nil {
+			Notify(err.Error(), "Error")
+		} else if action == "markAsPlayed" {
+			Notify("Marked as played: " + e.Title)
+		} else {
+			Notify("Archived: " + e.Title)
+		}
+	case "subscribe":
+		p := &Podcast{UUID: os.Getenv("podcastUuid"), Name: os.Getenv("podcast")}
+		if err := p.Subscribe(); err != nil {
+			Notify(err.Error(), "Error")
+		} else {
+			if p.Name == "" {
+				p.GetInfo()
+			}
+			Notify("Subscribed to " + p.Name)
+			GetPodcastList(true)
+		}
+	case "unsubscribe":
+		p := &Podcast{UUID: os.Getenv("podcastUuid"), Name: os.Getenv("podcast")}
+		if p.Name == "" {
+			p.GetInfo()
+		}
+		if err := p.Unsubscribe(); err != nil {
+			Notify(err.Error(), "Error")
+		} else {
+			Notify("Unsubscribed from " + p.Name)
+			p.ClearCache()
+			GetPodcastList(true)
+		}
+	default:
+		// do nothing
+	}
+}
+
+func runTrigger(trigger string) {
+	switch trigger {
+	case "podcasts":
+		ListPodcasts()
+	case "latest":
+		ListNewReleases()
+	case "episodes":
+		p := &Podcast{UUID: os.Getenv("podcastUuid")}
+		p.GetEpisodes(false)
+		goBackTo := os.Getenv("prevTrigger")
+		p.ListEpisodes(goBackTo)
+	case "queue":
+		ListUpNext()
+	case "playing":
+		GetPlaying()
+	case "search":
+		term := ""
+		if len(os.Args) > 1 {
+			term = os.Args[1]
+		}
+		Search(term)
+	case "test":
+		log.Println("test")
+	default:
+	}
+}
+
+func main() {
+	setup()
 
 	trigger := os.Getenv("trigger")
-	url := os.Getenv("url")
 	action := os.Getenv("action")
 	if action == "" {
 		action = os.Getenv("actionKeep")
 	}
 
-	switch action {
-	case "refresh":
-		podcast = &Podcast{Name: os.Getenv("podcast")}
-		podcast.GetEpisodes(true)
-	case "refreshAll":
-		GetAllPodcasts(true)
-		refreshLatest()
-	case "refreshLatest":
-		refreshLatest()
-	case "refreshInBackground":
-		GetAllPodcasts(true)
-		clearOldCache()
-		defer os.Remove(getCachePath("podcasts.lock"))
-	case "addToQueue":
-		if err := AddToPlaylist(url); err != nil {
-			Notify(err.Error(), "Error")
-		} else if trigger != "queue" {
-			AddToLatest(url, os.Getenv("podcast"))
-		}
-	case "play":
-		if err := PlayEpisode(url); err != nil {
-			Notify(err.Error(), "Error")
-		}
-	case "playNext":
-		if err := PlayEpisode(url, true); err != nil {
-			Notify(err.Error(), "Error")
-		}
-	case "remove":
-		if err := RemoveFromPlaylist(os.Getenv("id")); err != nil {
-			Notify(err.Error(), "Error")
-		}
-	case "playPause":
-		PlayPause()
-	case "30Back":
-		runCommand("seek", "-30")
-	case "next":
-		runCommand("playlist-next")
-	case "save":
-		SavePlaylist()
-		Notify("Playlist saved")
-	case "loadList":
-		if err := LoadPlaylist(); err != nil {
-			Notify(err.Error(), "Error")
-		}
-	case "subscribe":
-		p, err := SubscribeNewFeed(&Podcast{URL: os.Args[1]})
-		if err != nil {
-			Notify(err.Error(), "Error")
-		} else {
-			Notify("Subscribed to " + p.Name)
-		}
-	case "unsubscribe":
-		p, err := UnsubscribeFeed(&Podcast{URL: os.Args[1]})
-		if err != nil {
-			Notify(err.Error(), "Error")
-		} else {
-			Notify("Unsubscribed from " + p.Name)
-			p.ClearCache()
-		}
-	default:
-		// do nothing
-	}
-
-	if action != "" {
-		fmt.Println("{\"alfredworkflow\":{\"variables\":{\"action\":\"\"}}}")
+	if os.Getenv("refresh") != "" {
+		refreshCache([]string{os.Getenv("refresh"), os.Getenv("podcastUuid")})
+		fmt.Println(`{"alfredworkflow":{"variables":{"refresh":""}}}`)
+		return
+	} else if action != "" {
+		performAction(action)
+		fmt.Println(`{"alfredworkflow":{"variables":{"action":""}}}`)
 		return
 	}
 
 	workflow.SetVar("trigger", trigger)
 
-	switch trigger {
-	case "podcasts":
-		ListPodcasts()
-	case "latest":
-		ListLatest()
-	case "episodes":
-		ListEpisodes()
-	case "queue":
-		if err := ListQueue(); err != nil {
-			GetPlaying()
-		}
-	case "playing":
-		GetPlaying()
-	case "test":
-		log.Println("test")
-	default:
-	}
+	runTrigger(trigger)
 
 	workflow.Output()
 }
