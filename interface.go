@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"sort"
 	"sync"
+	"time"
 )
 
 func ListPodcasts() {
@@ -23,8 +26,10 @@ func ListPodcasts() {
 		return
 	}
 	for _, p := range podcastMap {
-		workflow.AddItem(p.Format(false))
+		item := p.Format(false)
+		workflow.AddItem(item)
 	}
+	workflow.SetVar("prevTrigger", "podcasts")
 	sort.Slice(workflow.Items, func(i, j int) bool {
 		_i := workflow.Items[i].UID
 		_j := workflow.Items[j].UID
@@ -55,6 +60,7 @@ func ListNewReleases() {
 		fn := &Mod{Subtitle: "Refresh new releases", Icon: &Icon{Path: "icons/refresh.png"}}
 		fn.SetVar("refresh", "new_release")
 		item.Mods.Fn = fn
+		item.Mods.Shift.SetVar("prevTrigger", "latest")
 		workflow.AddItem(item)
 	}
 }
@@ -83,12 +89,13 @@ func ListUpNext() {
 		if i < 2 {
 			item.Mods.Cmd = nil
 		}
+		item.Mods.Shift.SetVar("prevTrigger", "queue")
 		workflow.AddItem(item)
 	}
 	upNextSummary(episodes)
 }
 
-func (p *Podcast) ListEpisodes() {
+func (p *Podcast) ListEpisodes(goBackTo string) {
 	if p == nil {
 		workflow.WarnEmpty("Podcast Not Found")
 		return
@@ -132,8 +139,9 @@ func (p *Podcast) ListEpisodes() {
 		Title: "Go Back",
 		Icon:  &Icon{Path: "icons/back.png"},
 	}
-	item.SetVar("trigger", "podcasts")
+	item.SetVar("trigger", goBackTo)
 	workflow.AddItem(&item)
+	workflow.SetVar("prevTrigger", "")
 }
 
 func (p *Podcast) Format(search bool) *Item {
@@ -241,17 +249,17 @@ func (e *Episode) Format(upNext bool) *Item {
 			CmdShift  *Mod `json:"cmd+shift,omitempty"`
 		}{},
 	}
-  action := "action"
+	action := "action"
 	if !upNext {
 		if _, ok := upNextMap[e.UUID]; ok {
 			item.Title = "􀑬 " + item.Title
 		}
-    action = "actionKeep"
-    // ↵ add episode to end of queue
-    item.SetVar(action, "play_last")
-    item.SetVar("uuid", e.UUID)
-    item.SetVar("podcastUuid", e.PodcastUUID)
-  }
+		action = "actionKeep"
+		// ↵ add episode to end of queue
+		item.SetVar(action, "play_last")
+		item.SetVar("uuid", e.UUID)
+		item.SetVar("podcastUuid", e.PodcastUUID)
+	}
 
 	// ⌘ add episode to top of queue
 	cmd := &Mod{Subtitle: "Play next", Icon: &Icon{Path: "icons/playNext.png"}}
@@ -335,14 +343,25 @@ func Search(query string) error {
 	}()
 	go func() {
 		defer wg.Done()
-		searchResults, searchErr = SearchPodcasts(query)
+		if query == "" {
+			file := getCachePath("search_results")
+			if data, err := readCache(file, time.Duration(math.MaxInt64)); err != nil {
+				searchErr = err
+			} else if err := json.Unmarshal(data, &searchResults); err != nil {
+				searchErr = err
+			}
+		} else {
+			searchResults, searchErr = SearchPodcasts(query)
+		}
 	}()
 	wg.Wait()
 
 	if listErr != nil {
+		workflow.WarnEmpty(listErr.Error())
 		return listErr
 	}
 	if searchErr != nil {
+		workflow.WarnEmpty(searchErr.Error())
 		return searchErr
 	}
 	if len(searchResults) == 0 {
@@ -351,6 +370,7 @@ func Search(query string) error {
 	}
 	for _, p := range searchResults {
 		item := p.Format(true)
+		item.Mods.Shift.SetVar("prevTrigger", "search")
 		workflow.AddItem(item)
 	}
 	return nil
