@@ -8,11 +8,11 @@
 	<string>Information</string>
 	<key>connections</key>
 	<dict>
-		<key>21CBCB1B-D251-4559-9886-65CE46316250</key>
+		<key>02B6F09C-8F26-4B86-A5CC-0F7B7C60ACEB</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>87CDAD0E-32FD-4F0C-BA35-CD6F0B8F9F98</string>
+				<string>E29F54C5-29F6-48FB-AC97-C0A76ABFA14D</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -23,11 +23,11 @@
 				<false/>
 			</dict>
 		</array>
-		<key>596E5CDA-FFFA-434E-A974-F76BEC66D9A5</key>
+		<key>2AA4237C-F560-4D9B-90FA-DEA6CC12B5C1</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>9BC5438E-B923-4800-92F3-B1B617081139</string>
+				<string>6B000EC5-5381-48B5-B049-5ED89FB614D5</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -36,63 +36,63 @@
 				<true/>
 			</dict>
 		</array>
-		<key>76D2CEEB-D590-47F7-9F8A-1D2F0C5E6BF3</key>
+		<key>2CB183A7-DF03-46E2-B51C-652E96A92A14</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>9BC5438E-B923-4800-92F3-B1B617081139</string>
+				<string>6B000EC5-5381-48B5-B049-5ED89FB614D5</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<true/>
+			</dict>
+		</array>
+		<key>54952AA2-61D3-486A-AFD5-992BA8250BF7</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>6B000EC5-5381-48B5-B049-5ED89FB614D5</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<true/>
+			</dict>
+		</array>
+		<key>5B0A875F-3139-4358-AF44-5436E9F3B665</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>6B000EC5-5381-48B5-B049-5ED89FB614D5</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<true/>
+			</dict>
+		</array>
+		<key>6B000EC5-5381-48B5-B049-5ED89FB614D5</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>02B6F09C-8F26-4B86-A5CC-0F7B7C60ACEB</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
 				<string></string>
 				<key>vitoclose</key>
 				<false/>
-			</dict>
-		</array>
-		<key>8579BA61-4DE0-482A-8514-6B84F098C1C3</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>9BC5438E-B923-4800-92F3-B1B617081139</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<true/>
-			</dict>
-		</array>
-		<key>9BC5438E-B923-4800-92F3-B1B617081139</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>21CBCB1B-D251-4559-9886-65CE46316250</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
-		<key>CB3D3E62-0232-42D5-BEBE-108A2AF16F1C</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>9BC5438E-B923-4800-92F3-B1B617081139</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<true/>
 			</dict>
 		</array>
 	</dict>
 	<key>createdby</key>
 	<string>twio142</string>
 	<key>description</key>
-	<string>Manage podcasts in Alfred</string>
+	<string>Manage your podcasts with Pocket Casts</string>
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
@@ -149,7 +149,7 @@
 			<key>type</key>
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
-			<string>596E5CDA-FFFA-434E-A974-F76BEC66D9A5</string>
+			<string>2AA4237C-F560-4D9B-90FA-DEA6CC12B5C1</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
@@ -169,7 +169,7 @@
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>keyword</key>
-				<string>pcl</string>
+				<string>pcq</string>
 				<key>queuedelaycustom</key>
 				<integer>3</integer>
 				<key>queuedelayimmediatelyinitially</key>
@@ -179,56 +179,7 @@
 				<key>queuemode</key>
 				<integer>1</integer>
 				<key>runningsubtext</key>
-				<string></string>
-				<key>script</key>
-				<string>trigger=latest ./Podcasts</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>subtext</key>
-				<string></string>
-				<key>title</key>
-				<string></string>
-				<key>type</key>
-				<integer>11</integer>
-				<key>withspace</key>
-				<true/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.input.scriptfilter</string>
-			<key>uid</key>
-			<string>8579BA61-4DE0-482A-8514-6B84F098C1C3</string>
-			<key>version</key>
-			<integer>3</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>alfredfiltersresults</key>
-				<true/>
-				<key>alfredfiltersresultsmatchmode</key>
-				<integer>0</integer>
-				<key>argumenttreatemptyqueryasnil</key>
-				<true/>
-				<key>argumenttrimmode</key>
-				<integer>0</integer>
-				<key>argumenttype</key>
-				<integer>1</integer>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>keyword</key>
-				<string>pcn</string>
-				<key>queuedelaycustom</key>
-				<integer>3</integer>
-				<key>queuedelayimmediatelyinitially</key>
-				<true/>
-				<key>queuedelaymode</key>
-				<integer>0</integer>
-				<key>queuemode</key>
-				<integer>1</integer>
-				<key>runningsubtext</key>
-				<string></string>
+				<string>Loading…</string>
 				<key>script</key>
 				<string>trigger=queue ./Podcasts</string>
 				<key>scriptargtype</key>
@@ -238,7 +189,7 @@
 				<key>subtext</key>
 				<string></string>
 				<key>title</key>
-				<string></string>
+				<string>Podcast Queue</string>
 				<key>type</key>
 				<integer>11</integer>
 				<key>withspace</key>
@@ -247,7 +198,7 @@
 			<key>type</key>
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
-			<string>CB3D3E62-0232-42D5-BEBE-108A2AF16F1C</string>
+			<string>5B0A875F-3139-4358-AF44-5436E9F3B665</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
@@ -270,7 +221,7 @@
 			<key>type</key>
 			<string>alfred.workflow.action.script</string>
 			<key>uid</key>
-			<string>9BC5438E-B923-4800-92F3-B1B617081139</string>
+			<string>6B000EC5-5381-48B5-B049-5ED89FB614D5</string>
 			<key>version</key>
 			<integer>2</integer>
 		</dict>
@@ -289,7 +240,7 @@
 			<key>type</key>
 			<string>alfred.workflow.output.callexternaltrigger</string>
 			<key>uid</key>
-			<string>87CDAD0E-32FD-4F0C-BA35-CD6F0B8F9F98</string>
+			<string>E29F54C5-29F6-48FB-AC97-C0A76ABFA14D</string>
 			<key>version</key>
 			<integer>1</integer>
 		</dict>
@@ -321,9 +272,58 @@
 			<key>type</key>
 			<string>alfred.workflow.utility.conditional</string>
 			<key>uid</key>
-			<string>21CBCB1B-D251-4559-9886-65CE46316250</string>
+			<string>02B6F09C-8F26-4B86-A5CC-0F7B7C60ACEB</string>
 			<key>version</key>
 			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>pcl</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Loading…</string>
+				<key>script</key>
+				<string>trigger=latest ./Podcasts</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string></string>
+				<key>title</key>
+				<string>Podcast Latest</string>
+				<key>type</key>
+				<integer>11</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>2CB183A7-DF03-46E2-B51C-652E96A92A14</string>
+			<key>version</key>
+			<integer>3</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -337,32 +337,23 @@
 				<key>argumenttrimmode</key>
 				<integer>0</integer>
 				<key>argumenttype</key>
-				<integer>1</integer>
+				<integer>0</integer>
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>keyword</key>
-				<string>pca</string>
+				<string>pcs</string>
 				<key>queuedelaycustom</key>
 				<integer>3</integer>
 				<key>queuedelayimmediatelyinitially</key>
-				<true/>
+				<false/>
 				<key>queuedelaymode</key>
-				<integer>0</integer>
+				<integer>1</integer>
 				<key>queuemode</key>
 				<integer>1</integer>
 				<key>runningsubtext</key>
-				<string></string>
+				<string>Searching…</string>
 				<key>script</key>
-				<string>run=([arg])=&gt;{
-	let items = [{
-		title: 'Subscribe to a Podcast',
-		subtitle: 'Enter RSS URL',
-		valid: !!arg?.trim(),
-		arg,
-		variables: {actionKeep: 'subscribe'}
-	}];
-	return JSON.stringify({items});
-}</string>
+				<string>trigger=search ./Podcasts "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -370,16 +361,16 @@
 				<key>subtext</key>
 				<string></string>
 				<key>title</key>
-				<string></string>
+				<string>Podcast Search</string>
 				<key>type</key>
-				<integer>7</integer>
+				<integer>11</integer>
 				<key>withspace</key>
 				<true/>
 			</dict>
 			<key>type</key>
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
-			<string>76D2CEEB-D590-47F7-9F8A-1D2F0C5E6BF3</string>
+			<string>54952AA2-61D3-486A-AFD5-992BA8250BF7</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
@@ -388,54 +379,54 @@
 	<string></string>
 	<key>uidata</key>
 	<dict>
-		<key>21CBCB1B-D251-4559-9886-65CE46316250</key>
+		<key>02B6F09C-8F26-4B86-A5CC-0F7B7C60ACEB</key>
 		<dict>
 			<key>xpos</key>
-			<real>375</real>
+			<real>390</real>
 			<key>ypos</key>
-			<real>285</real>
+			<real>225</real>
 		</dict>
-		<key>596E5CDA-FFFA-434E-A974-F76BEC66D9A5</key>
+		<key>2AA4237C-F560-4D9B-90FA-DEA6CC12B5C1</key>
 		<dict>
 			<key>xpos</key>
-			<real>30</real>
-			<key>ypos</key>
 			<real>45</real>
+			<key>ypos</key>
+			<real>35</real>
 		</dict>
-		<key>76D2CEEB-D590-47F7-9F8A-1D2F0C5E6BF3</key>
+		<key>2CB183A7-DF03-46E2-B51C-652E96A92A14</key>
 		<dict>
 			<key>xpos</key>
-			<real>30</real>
+			<real>45</real>
 			<key>ypos</key>
-			<real>360</real>
+			<real>245</real>
 		</dict>
-		<key>8579BA61-4DE0-482A-8514-6B84F098C1C3</key>
+		<key>54952AA2-61D3-486A-AFD5-992BA8250BF7</key>
 		<dict>
 			<key>xpos</key>
-			<real>30</real>
+			<real>45</real>
 			<key>ypos</key>
-			<real>150</real>
+			<real>350</real>
 		</dict>
-		<key>87CDAD0E-32FD-4F0C-BA35-CD6F0B8F9F98</key>
+		<key>5B0A875F-3139-4358-AF44-5436E9F3B665</key>
 		<dict>
 			<key>xpos</key>
-			<real>420</real>
+			<real>45</real>
 			<key>ypos</key>
-			<real>255</real>
+			<real>140</real>
 		</dict>
-		<key>9BC5438E-B923-4800-92F3-B1B617081139</key>
+		<key>6B000EC5-5381-48B5-B049-5ED89FB614D5</key>
 		<dict>
 			<key>xpos</key>
-			<real>250</real>
+			<real>265</real>
 			<key>ypos</key>
-			<real>255</real>
+			<real>195</real>
 		</dict>
-		<key>CB3D3E62-0232-42D5-BEBE-108A2AF16F1C</key>
+		<key>E29F54C5-29F6-48FB-AC97-C0A76ABFA14D</key>
 		<dict>
 			<key>xpos</key>
-			<real>30</real>
+			<real>435</real>
 			<key>ypos</key>
-			<real>255</real>
+			<real>195</real>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>
@@ -446,20 +437,20 @@
 				<key>default</key>
 				<string></string>
 				<key>placeholder</key>
-				<string>https://raw.githubusercontent.com/</string>
+				<string></string>
 				<key>required</key>
 				<true/>
 				<key>trim</key>
 				<true/>
 			</dict>
 			<key>description</key>
-			<string></string>
+			<string>Email</string>
 			<key>label</key>
-			<string>Remote file of podcast feeds</string>
+			<string>Pocket Casts Account</string>
 			<key>type</key>
 			<string>textfield</string>
 			<key>variable</key>
-			<string>FEEDS_URL</string>
+			<string>email</string>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -469,39 +460,18 @@
 				<key>placeholder</key>
 				<string></string>
 				<key>required</key>
-				<false/>
+				<true/>
 				<key>trim</key>
 				<true/>
 			</dict>
 			<key>description</key>
+			<string>Password</string>
+			<key>label</key>
 			<string></string>
-			<key>label</key>
-			<string>GitHub API token</string>
 			<key>type</key>
 			<string>textfield</string>
 			<key>variable</key>
-			<string>API_TOKEN</string>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>default</key>
-				<string>30</string>
-				<key>placeholder</key>
-				<string></string>
-				<key>required</key>
-				<false/>
-				<key>trim</key>
-				<true/>
-			</dict>
-			<key>description</key>
-			<string>days</string>
-			<key>label</key>
-			<string>Fetch episodes in the past</string>
-			<key>type</key>
-			<string>textfield</string>
-			<key>variable</key>
-			<string>PODCAST_PAST_DAYS</string>
+			<string>password</string>
 		</dict>
 	</array>
 	<key>version</key>

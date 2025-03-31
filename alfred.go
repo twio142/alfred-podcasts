@@ -32,6 +32,7 @@ type Item struct {
 	Arg          string `json:"arg,omitempty"`
 	Valid        *bool  `json:"valid,omitempty"`
 	AutoComplete string `json:"autocomplete,omitempty"`
+	UID          string `json:"-"`
 	Type         string `json:"type,omitempty"`
 	Match        string `json:"match,omitempty"`
 	Text         struct {
@@ -42,11 +43,14 @@ type Item struct {
 	Icon         *Icon          `json:"icon,omitempty"`
 	Variables    map[string]any `json:"variables,omitempty"`
 	Mods         struct {
-		Cmd      *Mod `json:"cmd,omitempty"`
-		Alt      *Mod `json:"alt,omitempty"`
-		Shift    *Mod `json:"shift,omitempty"`
-		Ctrl     *Mod `json:"ctrl,omitempty"`
-		AltShift *Mod `json:"alt+shift,omitempty"`
+		Cmd       *Mod `json:"cmd,omitempty"`
+		Alt       *Mod `json:"alt,omitempty"`
+		Shift     *Mod `json:"shift,omitempty"`
+		Ctrl      *Mod `json:"ctrl,omitempty"`
+		Fn        *Mod `json:"fn,omitempty"`
+		AltShift  *Mod `json:"alt+shift,omitempty"`
+		CtrlShift *Mod `json:"ctrl+shift,omitempty"`
+		CmdShift  *Mod `json:"cmd+shift,omitempty"`
 	} `json:"mods"`
 }
 
