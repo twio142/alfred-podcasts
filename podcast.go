@@ -161,10 +161,9 @@ func GetPlaying() {
 		}
 	}
 	if e := FindEpisode(map[string]string{"title": title, "podcast": podcast, "author": author}); e != nil {
-		item := e.Format(false)
-		valid := false
-		item.Valid = &valid
+		item := e.Format(true)
 		item.Mods.Cmd = nil
+		item.Mods.Alt = nil
 		workflow.AddItem(item)
 	} else {
 		workflow.WarnEmpty("No Episode Playing")

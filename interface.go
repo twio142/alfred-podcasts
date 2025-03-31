@@ -50,7 +50,7 @@ func ListNewReleases() {
 	}
 	GetUpNext(false)
 	for _, e := range episodes {
-		item := e.Format(true)
+		item := e.Format(false)
 		//  refresh new releases
 		fn := &Mod{Subtitle: "Refresh new releases", Icon: &Icon{Path: "icons/refresh.png"}}
 		fn.SetVar("refresh", "new_release")
@@ -76,15 +76,13 @@ func ListUpNext() {
 		return
 	}
 	for i, e := range episodes {
-		item := e.Format(false)
+		item := e.Format(true)
 		if i == 0 {
 			item.Mods.Alt = nil
 		}
 		if i < 2 {
 			item.Mods.Cmd = nil
 		}
-		// ↵ do nothing
-		item.SetVar("actionKeep", "noop")
 		workflow.AddItem(item)
 	}
 	upNextSummary(episodes)
@@ -116,7 +114,7 @@ func (p *Podcast) ListEpisodes() {
 		if i == 30 {
 			break
 		}
-		item := e.Format(true)
+		item := e.Format(false)
 		item.Subtitle = fmt.Sprintf("􀪔 %s  ·  %s", e.Podcast, item.Subtitle)
 		item.Match = matchString(e.Title)
 		item.AutoComplete = ""
@@ -207,7 +205,7 @@ func (p *Podcast) Format(search bool) *Item {
 	return &item
 }
 
-func (e *Episode) Format(checkUpNext bool) *Item {
+func (e *Episode) Format(upNext bool) *Item {
 	icon := &Icon{Path: getCachePath("artworks", e.PodcastUUID)}
 	if _, err := os.Stat(icon.Path); err != nil {
 		icon = nil
@@ -243,26 +241,28 @@ func (e *Episode) Format(checkUpNext bool) *Item {
 			CmdShift  *Mod `json:"cmd+shift,omitempty"`
 		}{},
 	}
-	if checkUpNext {
+  action := "action"
+	if !upNext {
 		if _, ok := upNextMap[e.UUID]; ok {
 			item.Title = "􀑬 " + item.Title
 		}
-	}
-	// ↵ add episode to end of queue
-	item.SetVar("actionKeep", "play_last")
-	item.SetVar("uuid", e.UUID)
-	item.SetVar("podcastUuid", e.PodcastUUID)
+    action = "actionKeep"
+    // ↵ add episode to end of queue
+    item.SetVar(action, "play_last")
+    item.SetVar("uuid", e.UUID)
+    item.SetVar("podcastUuid", e.PodcastUUID)
+  }
 
 	// ⌘ add episode to top of queue
 	cmd := &Mod{Subtitle: "Play next", Icon: &Icon{Path: "icons/playNext.png"}}
-	cmd.SetVar("actionKeep", "play_next")
+	cmd.SetVar(action, "play_next")
 	cmd.SetVar("uuid", e.UUID)
 	cmd.SetVar("podcastUuid", e.PodcastUUID)
 	item.Mods.Cmd = cmd
 
 	// ⌥ play episode now
 	alt := &Mod{Subtitle: "Play now", Icon: &Icon{Path: "icons/play.png"}}
-	alt.SetVar("actionKeep", "play_now")
+	alt.SetVar(action, "play_now")
 	alt.SetVar("uuid", e.UUID)
 	alt.SetVar("podcastUuid", e.PodcastUUID)
 	item.Mods.Alt = alt
@@ -275,14 +275,14 @@ func (e *Episode) Format(checkUpNext bool) *Item {
 
 	// ⌃ mark episode as played
 	ctrl := &Mod{Subtitle: "Mark as played", Icon: &Icon{Path: "icons/check.png"}}
-	ctrl.SetVar("actionKeep", "markAsPlayed")
+	ctrl.SetVar(action, "markAsPlayed")
 	ctrl.SetVar("uuid", e.UUID)
 	ctrl.SetVar("podcastUuid", e.PodcastUUID)
 	item.Mods.Ctrl = ctrl
 
 	// ⌃⇧ archive episode
 	ctrlShift := &Mod{Subtitle: "Archive", Icon: &Icon{Path: "icons/archive.png"}}
-	ctrlShift.SetVar("actionKeep", "archive")
+	ctrlShift.SetVar(action, "archive")
 	ctrlShift.SetVar("uuid", e.UUID)
 	ctrlShift.SetVar("podcastUuid", e.PodcastUUID)
 	item.Mods.CtrlShift = ctrlShift
@@ -296,7 +296,7 @@ func upNextSummary(episodes []*Episode) {
 	}
 	var totalDuration int
 	for _, e := range episodes {
-		totalDuration += e.Duration
+		totalDuration += e.Duration - e.PlayedUpTo
 	}
 	item := Item{
 		Title:    fmt.Sprintf("%d Episodes, %s Remaining", len(episodes), formatDuration(totalDuration)),
