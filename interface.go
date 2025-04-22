@@ -56,10 +56,10 @@ func ListNewReleases() {
 	GetUpNext(false)
 	for _, e := range episodes {
 		item := e.Format(false)
-		//  refresh new releases
-		fn := &Mod{Subtitle: "Refresh new releases", Icon: &Icon{Path: "icons/refresh.png"}}
-		fn.SetVar("refresh", "new_release")
-		item.Mods.Fn = fn
+		// ⇧⌘ refresh new releases
+		cmdShift := &Mod{Subtitle: "Refresh new releases", Icon: &Icon{Path: "icons/refresh.png"}}
+		cmdShift.SetVar("refresh", "new_release")
+		item.Mods.CmdShift = cmdShift
 		item.Mods.Shift.SetVar("prevTrigger", "latest")
 		workflow.AddItem(item)
 	}
@@ -125,14 +125,14 @@ func (p *Podcast) ListEpisodes(goBackTo string) {
 		item.Subtitle = fmt.Sprintf("􀪔 %s  ·  %s", e.Podcast, item.Subtitle)
 		item.Match = matchString(e.Title)
 		item.AutoComplete = ""
-		//  refresh podcast
-		fn := &Mod{Subtitle: "Refresh podcast", Icon: &Icon{Path: "icons/refresh.png"}}
-		fn.SetVar("refresh", "podcast")
-		fn.SetVar("podcastUuid", e.PodcastUUID)
-		item.Mods.Fn = fn
+		// ⇧⌘ refresh podcast
+		cmdShift := &Mod{Subtitle: "Refresh podcast", Icon: &Icon{Path: "icons/refresh.png"}}
+		cmdShift.SetVar("refresh", "podcast")
+		cmdShift.SetVar("podcastUuid", e.PodcastUUID)
+		item.Mods.CmdShift = cmdShift
 		item.Mods.Shift = nil
 		item.Mods.Ctrl = nil
-		item.Mods.CtrlShift = nil
+		item.Mods.Fn = nil
 		workflow.AddItem(item)
 	}
 	item := Item{
@@ -193,16 +193,16 @@ func (p *Podcast) Format(search bool) *Item {
 		cmd.SetVar("podcast", p.Name)
 		item.Mods.Cmd = cmd
 	} else {
-		// ⌥ refresh podcast
-		alt := &Mod{Subtitle: "Refresh podcast", Icon: &Icon{Path: "icons/refresh.png"}}
-		alt.SetVar("refresh", "podcast")
-		alt.SetVar("podcastUuid", p.UUID)
-		item.Mods.Alt = alt
+		// ⌘ refresh podcast
+		cmd := &Mod{Subtitle: "Refresh podcast", Icon: &Icon{Path: "icons/refresh.png"}}
+		cmd.SetVar("refresh", "podcast")
+		cmd.SetVar("podcastUuid", p.UUID)
+		item.Mods.Cmd = cmd
 
-		// ⇧⌥ refresh all podcasts
-		altShift := &Mod{Subtitle: "Refresh all podcasts", Icon: &Icon{Path: "icons/refresh.png"}}
-		altShift.SetVar("refresh", "allPodcasts")
-		item.Mods.AltShift = altShift
+		// ⇧⌘ refresh all podcasts
+		cmdShift := &Mod{Subtitle: "Refresh all podcasts", Icon: &Icon{Path: "icons/refresh.png"}}
+		cmdShift.SetVar("refresh", "allPodcasts")
+		item.Mods.CmdShift = cmdShift
 
 		// ⌃ unsubscribe podcast
 		ctrl := &Mod{Subtitle: "Unsubscribe", Icon: &Icon{Path: "icons/trash.png"}}
@@ -288,12 +288,12 @@ func (e *Episode) Format(upNext bool) *Item {
 	ctrl.SetVar("podcastUuid", e.PodcastUUID)
 	item.Mods.Ctrl = ctrl
 
-	// ⌃⇧ archive episode
-	ctrlShift := &Mod{Subtitle: "Archive", Icon: &Icon{Path: "icons/archive.png"}}
-	ctrlShift.SetVar(action, "archive")
-	ctrlShift.SetVar("uuid", e.UUID)
-	ctrlShift.SetVar("podcastUuid", e.PodcastUUID)
-	item.Mods.CtrlShift = ctrlShift
+	//  archive episode
+	fn := &Mod{Subtitle: "Archive", Icon: &Icon{Path: "icons/archive.png"}}
+	fn.SetVar(action, "archive")
+	fn.SetVar("uuid", e.UUID)
+	fn.SetVar("podcastUuid", e.PodcastUUID)
+	item.Mods.Fn = fn
 
 	return &item
 }
@@ -308,21 +308,21 @@ func upNextSummary(episodes []*Episode) {
 	}
 	item := Item{
 		Title:    fmt.Sprintf("%d Episodes, %s Remaining", len(episodes), formatDuration(totalDuration)),
-		Subtitle: "Insert playlist",
-		Icon:     &Icon{Path: "icons/play.png"},
 	}
-	// ↵ append playlist
-	item.SetVar("actionKeep", "insert-next-play")
-
-	// ⌘ replace playlist
-	cmd := &Mod{Subtitle: "Replace playlist", Icon: &Icon{Path: "icons/play.png"}}
-	cmd.SetVar("actionKeep", "replace")
+	// ⌘ refresh queue
+	cmd := &Mod{Subtitle: "Refresh queue", Icon: &Icon{Path: "icons/refresh.png"}}
+	cmd.SetVar("refresh", "up_next")
 	item.Mods.Cmd = cmd
 
-	// ⌥ refresh queue
-	alt := &Mod{Subtitle: "Refresh queue", Icon: &Icon{Path: "icons/refresh.png"}}
-	alt.SetVar("refresh", "up_next")
+	// ⌥ replace playlist
+	alt := &Mod{Subtitle: "Replace playlist", Icon: &Icon{Path: "icons/play.png"}}
+	alt.SetVar("actionKeep", "replace")
 	item.Mods.Alt = alt
+
+	// ⇧⌥ append playlist
+	altShift := &Mod{Subtitle: "Append playlist", Icon: &Icon{Path: "icons/play.png"}}
+	altShift.SetVar("actionKeep", "insert-next-play")
+	item.Mods.AltShift = altShift
 
 	// ⇧ sync playlist
 	shift := &Mod{Subtitle: "Sync playlist", Icon: &Icon{Path: "icons/sync.png"}}
