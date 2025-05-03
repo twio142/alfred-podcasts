@@ -91,13 +91,14 @@ func getLockFile(refreshTarget []string) string {
 
 func refreshInBackground(refreshTarget []string) {
 	lockfile := getLockFile(refreshTarget)
-	_, err := os.OpenFile(lockfile, os.O_CREATE|os.O_EXCL, 0666)
+	f, err := os.OpenFile(lockfile, os.O_CREATE|os.O_EXCL, 0666)
 	if err != nil {
 		if os.IsExist(err) {
 			return
 		}
 		log.Fatalf("Failed to create lock file: %v", err)
 	}
+	f.Close()
 	cmd := exec.Command(os.Args[0])
 	cmd.Env = append(os.Environ(), "refresh="+refreshTarget[0])
 	if refreshTarget[0] == "podcast" && len(refreshTarget) > 1 {
@@ -106,7 +107,11 @@ func refreshInBackground(refreshTarget []string) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setsid: true,
 	}
-	cmd.Start()
+	if err := cmd.Start(); err != nil {
+		log.Printf("Failed to start background refresh process: %v", err)
+		os.Remove(lockfile)
+		return
+	}
 }
 
 func refreshCache(refreshTarget []string) error {
