@@ -134,7 +134,10 @@ func PocketCastsRequest(endpoint string, body *map[string]any, response any) err
 		return fmt.Errorf("error making request: %v", err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode == http.StatusUnauthorized {
+		os.Remove(".token")
+		return PocketCastsRequest(endpoint, body, response)
+	} else if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("request failed with status: %d", resp.StatusCode)
 	}
 	if response != nil {

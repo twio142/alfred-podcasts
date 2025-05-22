@@ -133,7 +133,9 @@ func main() {
 	}
 
 	if os.Getenv("refresh") != "" {
-		refreshCache([]string{os.Getenv("refresh"), os.Getenv("podcastUuid")})
+		if err := refreshCache([]string{os.Getenv("refresh"), os.Getenv("podcastUuid")}); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		}
 		fmt.Println(`{"alfredworkflow":{"variables":{"refresh":""}}}`)
 		return
 	} else if action != "" {

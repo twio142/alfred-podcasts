@@ -23,6 +23,7 @@
 - [x] Adapt existing objects to the changes
     - Add `uuid` field to `Episode` and `Podcast` objects
 - [x] Fix: Lock files are often not deleted :/
+- [x] Deal with 401 errors: Acquire new token
 
 ## Pocket Casts API
 
