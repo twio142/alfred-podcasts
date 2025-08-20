@@ -173,11 +173,16 @@ func (p *Podcast) Format(search bool) *Item {
 		}{},
 	}
 
+	if p.Link == "" {
+		item.QuickLookURL = "https://pocketcasts.com/podcasts/" + p.UUID
+	}
+
 	// ↵ list episodes
 	item.SetVar("trigger", "episodes")
 	item.SetVar("podcastUuid", p.UUID)
 
 	if search {
+		item.Arg = " "
 		item.Subtitle = "􀊱 " + p.Author
 		// ⌘ subscribe / unsubsribe podcast
 		var cmd *Mod
@@ -370,8 +375,8 @@ func Search(query string) error {
 	}
 	for _, p := range searchResults {
 		item := p.Format(true)
-		item.Mods.Shift.SetVar("prevTrigger", "search")
 		workflow.AddItem(item)
 	}
+	workflow.SetVar("prevTrigger", "search")
 	return nil
 }
