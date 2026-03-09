@@ -76,7 +76,7 @@ func FindEpisode(args map[string]string) *Episode {
 	}
 	if podcast != "" {
 		p := &Podcast{Name: podcast}
-		p.GetEpisodes(false)
+		_ = p.GetEpisodes(false)
 		for _, e := range p.EpisodeMap {
 			if (url != "" && e.URL == url) || (title != "" && e.Title == title) {
 				return e
@@ -84,7 +84,7 @@ func FindEpisode(args map[string]string) *Episode {
 		}
 	}
 	if author != "" {
-		GetAllPodcasts(false)
+		_ = GetAllPodcasts(false)
 		for _, p := range podcastMap {
 			if p.Author == author {
 				for _, e := range p.EpisodeMap {
@@ -121,7 +121,7 @@ func (p *Podcast) ClearCache() {
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setsid: true,
 	}
-	cmd.Start()
+	_ = cmd.Start()
 }
 
 func (e *Episode) CacheShownotes() string {
@@ -143,7 +143,7 @@ func (e *Episode) CacheShownotes() string {
 	if e.Image != "" {
 		showNotes += "\n\n<img width=\"20%\" src=\"" + e.Image + "\"/>"
 	}
-	os.WriteFile(file, []byte(showNotes), 0644)
+	_ = os.WriteFile(file, []byte(showNotes), 0o644)
 	return file
 }
 
@@ -215,7 +215,7 @@ func SyncPlaylist() error {
 		} else if e.PlayedUpTo > 0 {
 			if err := e.Update(map[string]any{
 				"position": fmt.Sprintf("%d", e.PlayedUpTo),
-				"status": 2,
+				"status":   2,
 			}); err != nil {
 				errs = append(errs, err)
 			}

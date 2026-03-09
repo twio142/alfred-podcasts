@@ -133,9 +133,9 @@ func PocketCastsRequest(endpoint string, body *map[string]any, response any) err
 	if err != nil {
 		return fmt.Errorf("error making request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode == http.StatusUnauthorized {
-		os.Remove(".token")
+		_ = os.Remove(".token")
 		return PocketCastsRequest(endpoint, body, response)
 	} else if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("request failed with status: %d", resp.StatusCode)
@@ -160,7 +160,7 @@ func PocketCastsLogin(email, password string) error {
 		return err
 	}
 	pocketCastsToken = response.Token
-	err := os.WriteFile(".token", []byte(response.Token), 0600)
+	err := os.WriteFile(".token", []byte(response.Token), 0o600)
 	if err != nil {
 		return fmt.Errorf("failed to store token: %v", err)
 	}
@@ -204,7 +204,7 @@ func GetPodcastList(force bool) error {
 		podcastMap[p.UUID] = _p
 	}
 	data, _ := json.Marshal(podcastMap)
-	writeCache(file, data)
+	_ = writeCache(file, data)
 	return nil
 }
 
@@ -244,7 +244,7 @@ func GetUpNext(force bool) ([]*Episode, error) {
 func processUpNextResponse(response *PocketCastsUpNextResponse) ([]*Episode, error) {
 	upNextMap = make(map[string]*Episode)
 	if len(podcastMap) == 0 {
-		GetPodcastList(false)
+		_ = GetPodcastList(false)
 	}
 	episodes := make([]*Episode, len(response.Episodes))
 
@@ -257,7 +257,7 @@ func processUpNextResponse(response *PocketCastsUpNextResponse) ([]*Episode, err
 			podcastMap[e.PodcastUUID] = p
 		}
 		if p.Name == "" {
-			p.GetInfo()
+			_ = p.GetInfo()
 		}
 		_e := &Episode{
 			UUID:        e.UUID,
@@ -285,7 +285,7 @@ func processUpNextResponse(response *PocketCastsUpNextResponse) ([]*Episode, err
 
 	data, _ := json.Marshal(episodes)
 	file := getCachePath("up_next")
-	writeCache(file, data)
+	_ = writeCache(file, data)
 
 	return episodes, nil
 }
@@ -324,7 +324,7 @@ func GetList(list string, force bool) ([]*Episode, error) {
 			podcastMap[e.PodcastUUID] = p
 		}
 		if p.Name == "" {
-			p.GetInfo()
+			_ = p.GetInfo()
 		}
 		_e := &Episode{
 			UUID:        e.UUID,
@@ -342,7 +342,7 @@ func GetList(list string, force bool) ([]*Episode, error) {
 		p.EpisodeMap[e.UUID] = _e
 	}
 	data, _ := json.Marshal(episodes)
-	writeCache(file, data)
+	_ = writeCache(file, data)
 	return episodes, nil
 }
 
@@ -367,7 +367,7 @@ func (p *Podcast) GetInfo() error {
 	p.Link = response.Podcast.Link
 	p.Image = fmt.Sprintf("https://static.pocketcasts.com/discover/images/webp/200/%s.webp", p.UUID)
 	data, _ := json.Marshal(p)
-	writeCache(file, data)
+	_ = writeCache(file, data)
 	return nil
 }
 
@@ -472,6 +472,6 @@ func (p *Podcast) fetchAndUpdateEpisodes() error {
 
 	data, _ := json.Marshal(p)
 	file := getCachePath("podcasts", p.UUID)
-	writeCache(file, data)
+	_ = writeCache(file, data)
 	return nil
 }

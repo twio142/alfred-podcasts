@@ -53,7 +53,7 @@ func ListNewReleases() {
 		workflow.AddItem(&item)
 		return
 	}
-	GetUpNext(false)
+	_, _ = GetUpNext(false)
 	for _, e := range episodes {
 		item := e.Format(false)
 		// ⇧⌘ refresh new releases
@@ -116,7 +116,7 @@ func (p *Podcast) ListEpisodes(goBackTo string) {
 	sort.Slice(episodes, func(i, j int) bool {
 		return episodes[i].Date.After(episodes[j].Date)
 	})
-	GetUpNext(false)
+	_, _ = GetUpNext(false)
 	for i, e := range episodes {
 		if i == 30 {
 			break
@@ -312,7 +312,7 @@ func upNextSummary(episodes []*Episode) {
 		totalDuration += e.Duration - e.PlayedUpTo
 	}
 	item := Item{
-		Title:    fmt.Sprintf("%d Episodes, %s Remaining", len(episodes), formatDuration(totalDuration)),
+		Title: fmt.Sprintf("%d Episodes, %s Remaining", len(episodes), formatDuration(totalDuration)),
 	}
 	// ⌘ refresh queue
 	cmd := &Mod{Subtitle: "Refresh queue", Icon: &Icon{Path: "icons/refresh.png"}}

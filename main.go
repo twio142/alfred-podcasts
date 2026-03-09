@@ -15,17 +15,17 @@ var (
 
 func setup() {
 	if _, err := os.Stat(cacheDir + "/podcasts"); os.IsNotExist(err) {
-		if err = os.MkdirAll(cacheDir+"/podcasts", 0755); err != nil {
+		if err = os.MkdirAll(cacheDir+"/podcasts", 0o755); err != nil {
 			log.Fatal(err)
 		}
 	}
 	if _, err := os.Stat(cacheDir + "/artworks"); os.IsNotExist(err) {
-		if err = os.MkdirAll(cacheDir+"/artworks", 0755); err != nil {
+		if err = os.MkdirAll(cacheDir+"/artworks", 0o755); err != nil {
 			log.Fatal(err)
 		}
 	}
 	if _, err := os.Stat(cacheDir + "/shownotes"); os.IsNotExist(err) {
-		if err = os.MkdirAll(cacheDir+"/shownotes", 0755); err != nil {
+		if err = os.MkdirAll(cacheDir+"/shownotes", 0o755); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -35,19 +35,19 @@ func performAction(action string) {
 	switch action {
 	case "insert-next-play", "replace":
 		if playlist, err := ExportPlaylist(); err == nil {
-			loadPlaylist(playlist, action)
+			_ = loadPlaylist(playlist, action)
 		}
 	case "play_now", "play_next", "play_last":
 		p := &Podcast{
 			UUID: os.Getenv("podcastUuid"),
 		}
-		p.GetEpisodes(false)
+		_ = p.GetEpisodes(false)
 		if e, ok := p.EpisodeMap[os.Getenv("uuid")]; ok {
 			if _, err := e.AddToQueue(action); err != nil {
 				Notify(err.Error(), "Error")
 			} else if action == "play_now" {
 				if playlist, err := ExportPlaylist(); err == nil {
-					loadPlaylist(playlist, "replace")
+					_ = loadPlaylist(playlist, "replace")
 				}
 			} else {
 				Notify("Added to queue: " + e.Title)
@@ -74,22 +74,22 @@ func performAction(action string) {
 			Notify(err.Error(), "Error")
 		} else {
 			if p.Name == "" {
-				p.GetInfo()
+				_ = p.GetInfo()
 			}
 			Notify("Subscribed to " + p.Name)
-			GetPodcastList(true)
+			_ = GetPodcastList(true)
 		}
 	case "unsubscribe":
 		p := &Podcast{UUID: os.Getenv("podcastUuid"), Name: os.Getenv("podcast")}
 		if p.Name == "" {
-			p.GetInfo()
+			_ = p.GetInfo()
 		}
 		if err := p.Unsubscribe(); err != nil {
 			Notify(err.Error(), "Error")
 		} else {
 			Notify("Unsubscribed from " + p.Name)
 			p.ClearCache()
-			GetPodcastList(true)
+			_ = GetPodcastList(true)
 		}
 	default:
 		// do nothing
@@ -104,7 +104,7 @@ func runTrigger(trigger string) {
 		ListNewReleases()
 	case "episodes":
 		p := &Podcast{UUID: os.Getenv("podcastUuid")}
-		p.GetEpisodes(false)
+		_ = p.GetEpisodes(false)
 		goBackTo := os.Getenv("prevTrigger")
 		p.ListEpisodes(goBackTo)
 	case "queue":
@@ -116,7 +116,7 @@ func runTrigger(trigger string) {
 		if len(os.Args) > 1 {
 			term = os.Args[1]
 		}
-		Search(term)
+		_ = Search(term)
 	case "test":
 		log.Println("test")
 	default:

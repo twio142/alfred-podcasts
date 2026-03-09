@@ -183,14 +183,14 @@ func TestPodcast_PocketCastsGetEpisodes(t *testing.T) {
 		force   bool
 		wantErr bool
 	}{
-    {
-      name: "valid get podcast episodes",
-      podcast: main.Podcast{
-        Name: "The Daily",
-      },
-      force: true,
-      wantErr: false,
-    },
+		{
+			name: "valid get podcast episodes",
+			podcast: main.Podcast{
+				Name: "The Daily",
+			},
+			force:   true,
+			wantErr: false,
+		},
 		{
 			name: "valid read podcast episodes cache",
 			podcast: main.Podcast{
@@ -199,12 +199,12 @@ func TestPodcast_PocketCastsGetEpisodes(t *testing.T) {
 			force:   false,
 			wantErr: false,
 		},
-    {
-      name: "invalid get podcast episodes",
-      podcast: main.Podcast{},
-      force: true,
-      wantErr: true,
-    },
+		{
+			name:    "invalid get podcast episodes",
+			podcast: main.Podcast{},
+			force:   true,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -221,4 +221,3 @@ func TestPodcast_PocketCastsGetEpisodes(t *testing.T) {
 		})
 	}
 }
-

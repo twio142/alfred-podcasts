@@ -15,16 +15,16 @@ func TestPlayEpisode(t *testing.T) {
 		wantErr  bool
 	}{
 		{
-			name:    "play episode",
-			u:       "https://dts-api.xiaoyuzhoufm.com/track/673699f98f10138dbc7808c7/67cdda65e924d4525a6b387b/media.xyzcdn.net/673699f98f10138dbc7808c7/lulrlShHTt8GRX3__W3UCGkGI5Hm.m4a",
+			name:     "play episode",
+			u:        "https://dts-api.xiaoyuzhoufm.com/track/673699f98f10138dbc7808c7/67cdda65e924d4525a6b387b/media.xyzcdn.net/673699f98f10138dbc7808c7/lulrlShHTt8GRX3__W3UCGkGI5Hm.m4a",
 			position: "",
-			wantErr: false,
+			wantErr:  false,
 		},
 		{
-			name:    "play episode next",
-			u:       "https://cdn.lizhi.fm/audio/2025/03/15/3132776168121244678_hd.mp3",
+			name:     "play episode next",
+			u:        "https://cdn.lizhi.fm/audio/2025/03/15/3132776168121244678_hd.mp3",
 			position: "next",
-			wantErr: false,
+			wantErr:  false,
 		},
 	}
 	for _, tt := range tests {

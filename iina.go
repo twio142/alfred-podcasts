@@ -19,8 +19,8 @@ func runCommand(command ...any) (any, error) {
 		return "", err
 	}
 	go func() {
-		defer stdin.Close()
-		json.NewEncoder(stdin).Encode(map[string]any{
+		defer func() { _ = stdin.Close() }()
+		_ = json.NewEncoder(stdin).Encode(map[string]any{
 			"command": command,
 		})
 	}()

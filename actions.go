@@ -69,7 +69,7 @@ func ArchiveEpisodes(episodes []*Episode, markAsPlayed bool) error {
 			return fmt.Errorf("episode info missing")
 		}
 		if markAsPlayed {
-			e.Update(map[string]any{
+			_ = e.Update(map[string]any{
 				"status": 3,
 			})
 		}
@@ -226,6 +226,6 @@ func SearchPodcasts(term string) ([]*Podcast, error) {
 	}
 	file := getCachePath("search_results")
 	data, _ := json.Marshal(podcasts)
-	writeCache(file, data)
+	_ = writeCache(file, data)
 	return podcasts, nil
 }

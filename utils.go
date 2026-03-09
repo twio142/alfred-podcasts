@@ -42,7 +42,7 @@ func downloadImage(url string, path string) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setsid: true,
 	}
-	cmd.Start()
+	_ = cmd.Start()
 }
 
 func getCachePath(parts ...string) string {
@@ -67,7 +67,7 @@ func readCache(path string, maxAge time.Duration, refreshTarget ...string) ([]by
 }
 
 func writeCache(path string, data []byte) error {
-	return os.WriteFile(path, data, 0644)
+	return os.WriteFile(path, data, 0o644)
 }
 
 func clearOldCache() {
@@ -76,7 +76,7 @@ func clearOldCache() {
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setsid: true,
 	}
-	cmd.Start()
+	_ = cmd.Start()
 }
 
 func getLockFile(refreshTarget []string) string {
@@ -91,14 +91,14 @@ func getLockFile(refreshTarget []string) string {
 
 func refreshInBackground(refreshTarget []string) {
 	lockfile := getLockFile(refreshTarget)
-	f, err := os.OpenFile(lockfile, os.O_CREATE|os.O_EXCL, 0666)
+	f, err := os.OpenFile(lockfile, os.O_CREATE|os.O_EXCL, 0o666)
 	if err != nil {
 		if os.IsExist(err) {
 			return
 		}
 		log.Fatalf("Failed to create lock file: %v", err)
 	}
-	f.Close()
+	_ = f.Close()
 	cmd := exec.Command(os.Args[0])
 	cmd.Env = append(os.Environ(), "refresh="+refreshTarget[0])
 	if refreshTarget[0] == "podcast" && len(refreshTarget) > 1 {
@@ -109,13 +109,13 @@ func refreshInBackground(refreshTarget []string) {
 	}
 	if err := cmd.Start(); err != nil {
 		log.Printf("Failed to start background refresh process: %v", err)
-		os.Remove(lockfile)
+		_ = os.Remove(lockfile)
 		return
 	}
 }
 
 func refreshCache(refreshTarget []string) error {
-	defer os.Remove(getLockFile(refreshTarget))
+	defer func() { _ = os.Remove(getLockFile(refreshTarget)) }()
 	target := refreshTarget[0]
 	switch target {
 	case "podcast":

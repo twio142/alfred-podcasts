@@ -45,10 +45,10 @@ func TestPodcast_CacheArtwork(t *testing.T) {
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for receiver constructor.
-		podcast  *main.Podcast
+		podcast *main.Podcast
 	}{
 		{
-			name:    "cache artwork",
+			name: "cache artwork",
 			podcast: &main.Podcast{
 				UUID: "05a51e00-7d3d-013d-2494-0eea28d86ca3",
 			},
@@ -65,7 +65,7 @@ func TestEpisode_CacheShownotes(t *testing.T) {
 	tests := []struct {
 		name string // description of this test case
 		// Named input parameters for receiver constructor.
-		podcast  *main.Podcast
+		podcast *main.Podcast
 	}{
 		{
 			name: "cache shownotes",
@@ -140,4 +140,3 @@ func TestSyncPlaylist(t *testing.T) {
 		})
 	}
 }
-
