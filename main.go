@@ -117,6 +117,20 @@ func runTrigger(trigger string) {
 			term = os.Args[1]
 		}
 		_ = Search(term)
+	case "episode_info":
+		shareURL := ""
+		if len(os.Args) > 1 {
+			shareURL = os.Args[1]
+		}
+		episode, err := GetEpisodeByURL(shareURL)
+		if err != nil {
+			log.Fatal(err)
+		}
+		jsonStr, err := episode.JSON()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(jsonStr)
 	case "test":
 		log.Println("test")
 	default:

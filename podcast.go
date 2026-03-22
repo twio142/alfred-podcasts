@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"os"
@@ -30,15 +31,23 @@ type Podcast struct {
 type Episode struct {
 	Title       string    `json:"title"`
 	URL         string    `json:"url"`
-	ShowNotes   string    `json:"show_notes"`
+	ShowNotes   string    `json:"show_notes,omitempty"`
 	Podcast     string    `json:"podcast"`
 	PodcastUUID string    `json:"podcast_uuid"`
 	Date        time.Time `json:"date"`
 	Duration    int       `json:"duration"`
-	PlayedUpTo  int       `json:"playedUpTo"`
+	PlayedUpTo  int       `json:"playedUpTo,omitempty"`
 	Played      bool      `json:"-"`
-	Image       string    `json:"image"`
+	Image       string    `json:"image,omitempty"`
 	UUID        string    `json:"uuid"`
+}
+
+func (e *Episode) JSON() (string, error) {
+	data, err := json.Marshal(e)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }
 
 func GetAllPodcasts(force bool) error {

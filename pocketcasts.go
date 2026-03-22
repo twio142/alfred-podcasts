@@ -475,3 +475,95 @@ func (p *Podcast) fetchAndUpdateEpisodes() error {
 	_ = writeCache(file, data)
 	return nil
 }
+
+func resolveEpisodeURL(shareURL string) (podcastUUID, episodeUUID string, err error) {
+	if strings.Contains(shareURL, "pocketcasts.com/podcast/") {
+		return parseEpisodePath(shareURL)
+	}
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	resp, err := client.Get(shareURL)
+	if err != nil {
+		return "", "", fmt.Errorf("error resolving URL: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	location := resp.Header.Get("Location")
+	if location == "" {
+		return "", "", fmt.Errorf("no redirect found for URL: %s", shareURL)
+	}
+	return parseEpisodePath(location)
+}
+
+func GetEpisodeByURL(shareURL string) (*Episode, error) {
+	podcastUUID, episodeUUID, err := resolveEpisodeURL(shareURL)
+	if err != nil {
+		return nil, err
+	}
+
+	type requestResult struct {
+		response *PocketCastsEpisodesResponse
+		err      error
+	}
+	ch1 := make(chan requestResult)
+	ch2 := make(chan requestResult)
+
+	go func() {
+		var response PocketCastsEpisodesResponse
+		u := fmt.Sprintf("podcast-api.pocketcasts.com/podcast/full/%s", podcastUUID)
+		err := PocketCastsRequest(u, nil, &response)
+		ch1 <- requestResult{&response, err}
+	}()
+
+	go func() {
+		var response PocketCastsEpisodesResponse
+		u := fmt.Sprintf("podcast-api.pocketcasts.com/mobile/show_notes/full/%s", podcastUUID)
+		err := PocketCastsRequest(u, nil, &response)
+		ch2 <- requestResult{&response, err}
+	}()
+
+	r1 := <-ch1
+	r2 := <-ch2
+
+	if r1.err != nil {
+		return nil, r1.err
+	}
+	if r2.err != nil {
+		return nil, r2.err
+	}
+
+	var episode *Episode
+	for _, ep := range r1.response.Podcast.Episodes {
+		if ep.UUID == episodeUUID {
+			episode = &Episode{
+				UUID:        ep.UUID,
+				Title:       ep.Title,
+				URL:         ep.URL,
+				Podcast:     r1.response.Podcast.Name,
+				PodcastUUID: podcastUUID,
+				Date:        ep.Date,
+				Duration:    ep.Duration,
+				Image:       fmt.Sprintf("https://static.pocketcasts.com/discover/images/webp/200/%s.webp", podcastUUID),
+			}
+			break
+		}
+	}
+	if episode == nil {
+		return nil, fmt.Errorf("episode not found: %s", episodeUUID)
+	}
+
+	for _, ep := range r2.response.Podcast.Episodes {
+		if ep.UUID == episodeUUID {
+			episode.ShowNotes = ep.ShowNotes
+			if ep.Image != "" {
+				episode.Image = ep.Image
+			}
+			break
+		}
+	}
+
+	return episode, nil
+}

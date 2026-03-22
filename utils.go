@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -11,6 +12,19 @@ import (
 
 	"github.com/mozillazg/go-pinyin"
 )
+
+func parseEpisodePath(rawURL string) (podcastUUID, episodeUUID string, err error) {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return "", "", fmt.Errorf("invalid URL: %v", err)
+	}
+	// Path: /podcast/{podcast-slug}/{podcast-uuid}/{episode-slug}/{episode-uuid}
+	segments := strings.Split(strings.TrimPrefix(u.Path, "/"), "/")
+	if len(segments) < 5 || segments[0] != "podcast" {
+		return "", "", fmt.Errorf("unexpected URL format: %s", rawURL)
+	}
+	return segments[2], segments[4], nil
+}
 
 func matchString(text ...string) string {
 	py := text

@@ -221,3 +221,44 @@ func TestPodcast_PocketCastsGetEpisodes(t *testing.T) {
 		})
 	}
 }
+
+func TestGetEpisodeByURL(t *testing.T) {
+	tests := []struct {
+		name    string
+		url     string
+		wantErr bool
+	}{
+		{
+			name:    "pca.st share URL",
+			url:     "https://pca.st/7wgfhotl",
+			wantErr: false,
+		},
+		{
+			name:    "direct pocketcasts.com URL",
+			url:     "https://pocketcasts.com/podcast/the-interface/c1c38690-d8f4-013e-7c78-02d8c28b0a65/trailer/8befa1d7-a5fe-4e3f-a337-04afffb5679d",
+			wantErr: false,
+		},
+		{
+			name:    "invalid URL",
+			url:     "https://example.com/not-a-podcast",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, gotErr := main.GetEpisodeByURL(tt.url)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("GetEpisodeByURL() failed: %v", gotErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("GetEpisodeByURL() succeeded unexpectedly")
+			}
+			if got.Title == "" || got.UUID == "" || got.Podcast == "" {
+				t.Errorf("GetEpisodeByURL() returned incomplete episode: %+v", got)
+			}
+		})
+	}
+}
